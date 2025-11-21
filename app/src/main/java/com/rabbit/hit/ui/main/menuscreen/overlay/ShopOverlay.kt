@@ -120,10 +120,9 @@ private fun ShopItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White.copy(alpha = 0.35f))
+            .background(Color(0xFFF49C47).copy(alpha = 0.85f))
             .padding(bottom = 8.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White.copy(alpha = 0.92f))
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
@@ -138,14 +137,14 @@ private fun ShopItemCard(
                 GradientOutlinedText(
                     text = skin.title.uppercase(),
                     fontSize = 30.sp,
-                    strokeWidth = 8f,
+                    strokeWidth = 25f,
                     strokeColor = Color.White,
-                    gradientColors = listOf(Color(0xFF7A3CC9), Color(0xFF5A2EA0))
+                    gradientColors = listOf(Color(0xFFFF5722), Color(0xFFFF9800))
                 )
 
                 Text(
                     text = skin.description,
-                    color = Color(0xFF5B2E8F),
+                    color = Color(0xffffffff),
                     fontFamily = SeymourFont,
                     fontSize = 14.sp,
                     lineHeight = 16.sp,
@@ -256,7 +255,7 @@ fun ShopActionButton(
             }
             val gradients =
                 when (type) {
-                    ShopButtonType.BUY -> listOf(Color(0xFFFFF59D), Color(0xFFFFB74D))
+                    ShopButtonType.BUY -> listOf(Color(0xFFFFFFFF), Color(0xFFFFFFFF))
                     else -> listOf(textColor, textColor)
                 }
 
@@ -264,7 +263,7 @@ fun ShopActionButton(
                 text = text,
                 fontSize = if (type == ShopButtonType.BUY) 22.sp else 20.sp,
                 strokeWidth = 6f,
-                strokeColor = if (type == ShopButtonType.BUY) Color(0xFF8B5A00) else outlineColor,
+                strokeColor = if (type == ShopButtonType.BUY) Color(0xffff872a) else outlineColor,
                 gradientColors = gradients
             )
         }

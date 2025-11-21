@@ -20,8 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rabbit.hit.ui.main.component.PrimaryButton
-import com.rabbit.hit.ui.main.component.PrimaryVariant
 
 @Composable
 fun GameSettingsOverlay(
@@ -56,32 +54,6 @@ fun GameSettingsOverlay(
                 textAlign = TextAlign.Center
             )
 
-            PrimaryButton(
-                text = "Resume",
-                onClick = onResume,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                variant = PrimaryVariant.Orange
-            )
-
-            PrimaryButton(
-                text = "Try again",
-                onClick = onRetry,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                variant = PrimaryVariant.Yellow
-            )
-
-            PrimaryButton(
-                text = "Home",
-                onClick = onHome,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                variant = PrimaryVariant.PeachBack
-            )
         }
     }
 }

@@ -24,7 +24,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rabbit.hit.R
-import com.rabbit.hit.ui.main.component.StartPrimaryButton
 
 @Composable
 fun IntroOverlay(onStart: () -> Unit) {
@@ -61,11 +60,7 @@ fun IntroOverlay(onStart: () -> Unit) {
                 lineHeight = 20.sp,
                 textAlign = TextAlign.Center
             )
-            StartPrimaryButton(
-                text = "Start",
-                onClick = onStart,
-                modifier = Modifier.fillMaxWidth(0.7f)
-            )
+
         }
     }
 }

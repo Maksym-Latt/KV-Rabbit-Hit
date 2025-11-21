@@ -235,14 +235,7 @@ private fun GameHud(
             }
         }
 
-        SecondaryIconButton(onClick = onPause, modifier = Modifier.size(52.dp)) {
-            Icon(
-                imageVector = Icons.Default.Pause,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.fillMaxSize(0.7f)
-            )
-        }
+
     }
 }
 

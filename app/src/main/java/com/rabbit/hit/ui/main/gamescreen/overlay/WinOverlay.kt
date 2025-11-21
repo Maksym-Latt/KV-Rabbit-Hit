@@ -26,8 +26,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rabbit.hit.R
-import com.rabbit.hit.ui.main.component.PrimaryButton
-import com.rabbit.hit.ui.main.component.PrimaryVariant
 import com.rabbit.hit.ui.main.gamescreen.GameResult
 
 @Composable
@@ -80,23 +78,6 @@ fun WinOverlay(
                     .size(180.dp)
                     .padding(vertical = 6.dp),
                 contentScale = ContentScale.Fit
-            )
-
-            PrimaryButton(
-                text = "Try again",
-                onClick = onRetry,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                variant = PrimaryVariant.Orange
-            )
-            PrimaryButton(
-                text = "Home",
-                onClick = onHome,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                variant = PrimaryVariant.PeachBack
             )
         }
     }
