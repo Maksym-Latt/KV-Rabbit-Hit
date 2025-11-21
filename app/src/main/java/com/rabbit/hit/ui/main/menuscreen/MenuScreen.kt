@@ -22,6 +22,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.rabbit.hit.R
+import com.rabbit.hit.ui.main.component.MenuCoinDisplay
+import com.rabbit.hit.ui.main.component.MenuIconButton
+import com.rabbit.hit.ui.main.component.MenuPlayButton
+import com.rabbit.hit.ui.main.component.MenuStoreButton
+import com.rabbit.hit.ui.main.component.MenuTitle
 
 @Composable
 fun MenuScreen(
