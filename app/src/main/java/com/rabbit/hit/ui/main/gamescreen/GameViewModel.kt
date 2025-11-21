@@ -38,6 +38,7 @@ class GameViewModel @Inject constructor(
         val rotationSpeed: Float = 40f,
         val carrots: List<CarrotPin> = emptyList(),
         val skin: RabbitSkin = RabbitSkin.Classic,
+        val throwId: Int = 0,
     )
 
     private val _state = MutableStateFlow(GameUiState())
@@ -89,6 +90,7 @@ class GameViewModel @Inject constructor(
         }
 
         if (hasCollision) {
+            _state.update { it.copy(throwId = it.throwId + 1) }
             gameOver()
             return
         }
@@ -110,6 +112,7 @@ class GameViewModel @Inject constructor(
                 multiplier = newMultiplier,
                 rotationSpeed = it.rotationSpeed + 2f,
                 coins = updatedCoins,
+                throwId = it.throwId + 1,
             )
         }
         emitEvent(GameEvent.CoinCollected)
