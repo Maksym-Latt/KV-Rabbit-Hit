@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-private const val TARGET_ANGLE = 270f
+private const val TARGET_ANGLE = 90f
 private const val COLLISION_THRESHOLD = 12f
 private const val ROTATION_ACCELERATION = 0.25f
 
