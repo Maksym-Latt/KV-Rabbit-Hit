@@ -243,7 +243,7 @@ private fun Playfield(
                 .padding(top = 64.dp)
                 .fillMaxWidth()
                 .height(420.dp),
-            contentAlignment = Alignment.TopCenter
+            contentAlignment = Alignment.Center
         ) {
             RotatingBasket(
                 angle = state.basketAngle,
@@ -402,7 +402,10 @@ private fun ThrowingCarrot(
     val radiusPx = remember { with(density) { (BasketSize / 2).toPx() } }
     val targetOffset = remember {
         val radians = Math.toRadians(TARGET_ANGLE.toDouble())
-        Offset((cos(radians) * radiusPx).toFloat(), (sin(radians) * radiusPx).toFloat())
+        Offset(
+            x = (cos(radians) * radiusPx).toFloat(),
+            y = -(sin(radians) * radiusPx).toFloat(),
+        )
     }
     val carrotRotation = TARGET_ANGLE + 270f
 
