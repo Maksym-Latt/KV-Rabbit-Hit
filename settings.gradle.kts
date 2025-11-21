@@ -9,13 +9,21 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven("https://jitpack.io")
+        maven("https://maven.google.com")
+    }
+    plugins {
+        id("com.google.dagger.hilt.android") version "2.50"
     }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
+        maven("https://jitpack.io")
+        maven("https://maven.google.com")
     }
 }
 
