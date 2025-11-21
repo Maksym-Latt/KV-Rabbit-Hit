@@ -53,7 +53,6 @@ fun SettingsOverlay(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
-    var graphicsQuality by rememberSaveable { mutableStateOf(GraphicsQuality.MEDIUM) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -91,15 +90,7 @@ fun SettingsOverlay(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(28.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFFFFE7C6),
-                                    Color(0xFFFFC778),
-                                    Color(0xFFE57414)
-                                )
-                            )
-                        )
+                        .background(Color(0xFFF49C47).copy(alpha = 0.85f))
                         .padding(horizontal = 24.dp, vertical = 26.dp)
                 ) {
                     Column(
@@ -112,7 +103,7 @@ fun SettingsOverlay(
                             fontSize = 36.sp,
                             strokeWidth = 10f,
                             strokeColor = Color(0xFFFFF2D4),
-                            gradientColors = listOf(Color(0xFFFFF9E7), Color(0xFFFEF3D2))
+                            gradientColors = listOf(Color(0xFFFF9800), Color(0xFFFF9800))
                         )
 
                         SettingToggleRow(
@@ -137,11 +128,6 @@ fun SettingsOverlay(
                             onToggle = viewModel::toggleVibration,
                             iconOn = Icons.Default.Vibration,
                             iconOff = Icons.Default.Vibration
-                        )
-
-                        GraphicsQualityRow(
-                            quality = graphicsQuality,
-                            onNext = { graphicsQuality = graphicsQuality.next() }
                         )
                     }
                 }
@@ -170,7 +156,7 @@ private fun SettingToggleRow(
     ) {
         Text(
             text = title,
-            color = Color(0xFF8D4200),
+            color = Color(0xffffffff),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = SeymourFont
@@ -179,52 +165,7 @@ private fun SettingToggleRow(
         MenuIconButton(
             iconVector = if (checked) iconOn else iconOff,
             onClick = { onToggle(!checked) },
-            modifier = Modifier.graphicsLayer(alpha = if (checked) 1f else 0.55f)
+            modifier = Modifier.graphicsLayer(alpha = if (checked) 1f else 0.85f)
         )
     }
-}
-
-@Composable
-private fun GraphicsQualityRow(
-    quality: GraphicsQuality,
-    onNext: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color(0x33FFFFFF))
-            .padding(horizontal = 18.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Graphics Quality",
-            color = Color(0xFF8D4200),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = SeymourFont
-        )
-
-        Box(modifier = Modifier.size(width = 140.dp, height = 50.dp)) {
-            ShopActionButton(
-                text = quality.label,
-                type = EQUIP,
-                onClick = onNext
-            )
-        }
-    }
-}
-
-private enum class GraphicsQuality(val label: String) {
-    LOW("Low"),
-    MEDIUM("Med"),
-    HIGH("High");
-
-    fun next(): GraphicsQuality =
-        when (this) {
-            LOW -> MEDIUM
-            MEDIUM -> HIGH
-            HIGH -> LOW
-        }
 }
