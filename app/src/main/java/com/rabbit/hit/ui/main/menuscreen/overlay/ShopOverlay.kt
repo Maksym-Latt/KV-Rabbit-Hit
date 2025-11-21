@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,8 +36,8 @@ import com.rabbit.hit.R
 import com.rabbit.hit.data.progress.RabbitSkin
 import com.rabbit.hit.ui.main.component.GradientOutlinedText
 import com.rabbit.hit.ui.main.component.MenuCoinDisplay
+import com.rabbit.hit.ui.main.component.MenuIconButton
 import com.rabbit.hit.ui.main.component.SeymourFont
-import com.rabbit.hit.ui.main.component.SecondaryBackButton
 
 @Composable
 fun ShopOverlay(
@@ -55,12 +57,6 @@ fun ShopOverlay(
             contentScale = ContentScale.Crop
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xAAFFFFFF))
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,8 +68,8 @@ fun ShopOverlay(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SecondaryBackButton(onClick = onClose)
-                MenuCoinDisplay(amount = coins, onClick = {}, modifier = Modifier.width(120.dp))
+                MenuIconButton(iconVector = Icons.Default.ArrowBack, onClick = onClose)
+                MenuCoinDisplay(amount = coins, onClick = {})
             }
 
             GradientOutlinedText(
@@ -124,14 +120,10 @@ private fun ShopItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFFB04500))
-            .padding(bottom = 6.dp)
+            .background(Color.White.copy(alpha = 0.35f))
+            .padding(bottom = 8.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFFE67E22), Color(0xFFD35400))
-                )
-            )
+            .background(Color.White.copy(alpha = 0.92f))
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
@@ -148,12 +140,12 @@ private fun ShopItemCard(
                     fontSize = 30.sp,
                     strokeWidth = 8f,
                     strokeColor = Color.White,
-                    gradientColors = listOf(Color.White, Color.White)
+                    gradientColors = listOf(Color(0xFF7A3CC9), Color(0xFF5A2EA0))
                 )
 
                 Text(
                     text = skin.description,
-                    color = Color.White,
+                    color = Color(0xFF5B2E8F),
                     fontFamily = SeymourFont,
                     fontSize = 14.sp,
                     lineHeight = 16.sp,
@@ -258,14 +250,22 @@ fun ShopActionButton(
 
             val outlineColor =
                 if (type == ShopButtonType.EQUIPPED) Color.Gray else Color.Transparent
-            val textColor = if (type == ShopButtonType.EQUIPPED) Color.White else Color.White
+            val textColor = when (type) {
+                ShopButtonType.BUY -> Color(0xFFFFD54F)
+                else -> Color.White
+            }
+            val gradients =
+                when (type) {
+                    ShopButtonType.BUY -> listOf(Color(0xFFFFF59D), Color(0xFFFFB74D))
+                    else -> listOf(textColor, textColor)
+                }
 
             GradientOutlinedText(
                 text = text,
                 fontSize = if (type == ShopButtonType.BUY) 22.sp else 20.sp,
                 strokeWidth = 6f,
-                strokeColor = outlineColor,
-                gradientColors = listOf(textColor, textColor)
+                strokeColor = if (type == ShopButtonType.BUY) Color(0xFF8B5A00) else outlineColor,
+                gradientColors = gradients
             )
         }
     }
