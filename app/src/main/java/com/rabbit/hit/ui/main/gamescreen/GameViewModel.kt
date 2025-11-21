@@ -22,28 +22,50 @@ private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
 
 @HiltViewModel
-class GameViewModel @Inject constructor(
-    private val progressRepository: PlayerProgressRepository,
+class GameViewModel
+@Inject
+constructor(
+        private val progressRepository: PlayerProgressRepository,
 ) : ViewModel() {
 
     data class CarrotPin(val angle: Float)
 
-    data class CarrotFlight(val id: Int, val elapsedMs: Long = 0)
+    enum class ItemType {
+        COIN,
+        BOOST_X2,
+        BOOST_X5
+    }
+
+    data class OrbitingItem(
+            val angle: Float,
+            val type: ItemType,
+            val id: Int = (Math.random() * 100000).toInt()
+    )
+
+    data class ActiveBoost(val multiplier: Int, val remainingMs: Long)
+
+    data class CarrotFlight(val id: Int, val elapsedMs: Long = 0, val bouncing: Boolean = false)
 
     data class GameUiState(
-        val running: Boolean = false,
-        val showIntro: Boolean = true,
-        val isPaused: Boolean = false,
-        val isGameOver: Boolean = false,
-        val score: Int = 0,
-        val multiplier: Int = 1,
-        val coins: Int = 0,
-        val basketAngle: Float = 0f,
-        val rotationSpeed: Float = 55f,
-        val carrots: List<CarrotPin> = emptyList(),
-        val skin: RabbitSkin = RabbitSkin.Classic,
-        val throwId: Int = 0,
-        val flight: CarrotFlight? = null,
+            val running: Boolean = false,
+            val showIntro: Boolean = true,
+            val isPaused: Boolean = false,
+            val isGameOver: Boolean = false,
+            val isWin: Boolean = false,
+            val score: Int = 0,
+            val multiplier: Int = 1,
+            val coins: Int = 0,
+            val targetScore: Int = 20,
+            val basketAngle: Float = 0f,
+            val rotationSpeed: Float = 55f,
+            val targetRotationSpeed: Float = 55f,
+            val carrots: List<CarrotPin> = emptyList(),
+            val orbitingItems: List<OrbitingItem> = emptyList(),
+            val activeBoost: ActiveBoost? = null,
+            val skin: RabbitSkin = RabbitSkin.Classic,
+            val throwId: Int = 0,
+            val flight: CarrotFlight? = null,
+            val lastSpeedChangeMs: Long = 0,
     )
 
     private val _state = MutableStateFlow(GameUiState())
@@ -61,11 +83,23 @@ class GameViewModel @Inject constructor(
     }
 
     fun startRun() {
+        val orbitingItems = mutableListOf<OrbitingItem>()
+
+        // Add 2-3 coins at random angles
+        val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
+        coinAngles.forEach { angle -> orbitingItems.add(OrbitingItem(angle, ItemType.COIN)) }
+
+        // Add boost items
+        orbitingItems.add(OrbitingItem(60f, ItemType.BOOST_X2))
+        orbitingItems.add(OrbitingItem(240f, ItemType.BOOST_X5))
+
         _state.update {
             GameUiState(
-                running = true,
-                showIntro = false,
-                skin = it.skin,
+                    running = true,
+                    showIntro = false,
+                    skin = it.skin,
+                    orbitingItems = orbitingItems,
+                    targetRotationSpeed = 55f,
             )
         }
     }
@@ -77,27 +111,89 @@ class GameViewModel @Inject constructor(
         _state.update { current ->
             if (!current.running || current.isPaused || current.isGameOver) return@update current
 
-            val newAngle = normalizeAngle(current.basketAngle + current.rotationSpeed * deltaSeconds)
-            val newSpeed = (current.rotationSpeed + ROTATION_ACCELERATION * deltaSeconds)
-                .coerceAtMost(ROTATION_SPEED_LIMIT)
+            // Update boost timer
+            val updatedBoost =
+                    current.activeBoost?.let { boost ->
+                        val remaining = boost.remainingMs - deltaMs
+                        if (remaining <= 0) null else boost.copy(remainingMs = remaining)
+                    }
+
+            // Dynamic speed variation - basket rotates 60%+ of time
+            // Pauses are rare (10%) and max 1 second
+            val timeSinceLastChange = System.currentTimeMillis() - current.lastSpeedChangeMs
+            val shouldChangeSpeed = timeSinceLastChange > (1500..3000).random()
+
+            val newTargetSpeed =
+                    if (shouldChangeSpeed) {
+                        when ((0..100).random()) {
+                            in 0..10 -> 0f // Pause (10% - rare, max 1 sec with timing)
+                            in 11..25 -> -current.rotationSpeed * 0.7f // Reverse (15%)
+                            in 26..40 -> current.rotationSpeed * 1.6f // Speed up (15%)
+                            else -> 55f // Normal rotation (60%)
+                        }.coerceIn(-ROTATION_SPEED_LIMIT, ROTATION_SPEED_LIMIT)
+                    } else {
+                        current.targetRotationSpeed
+                    }
+
+            // Smooth speed interpolation
+            val smoothedSpeed =
+                    current.rotationSpeed + (newTargetSpeed - current.rotationSpeed) * 0.05f
+
+            val newAngle = normalizeAngle(current.basketAngle + smoothedSpeed * deltaSeconds)
 
             val flight = current.flight
             if (flight == null) {
                 return@update current.copy(
-                    basketAngle = newAngle,
-                    rotationSpeed = newSpeed,
+                        basketAngle = newAngle,
+                        rotationSpeed = smoothedSpeed,
+                        targetRotationSpeed = newTargetSpeed,
+                        activeBoost = updatedBoost,
+                        lastSpeedChangeMs =
+                                if (shouldChangeSpeed) System.currentTimeMillis()
+                                else current.lastSpeedChangeMs
+                )
+            }
+
+            // Handle bouncing carrot
+            if (flight.bouncing) {
+                if (flight.elapsedMs >= CARROT_FLIGHT_DURATION_MS) {
+                    // Bounce finished, game over
+                    emitEvent(GameEvent.GameOver)
+                    return@update current.copy(
+                            running = false,
+                            isGameOver = true,
+                            isPaused = false,
+                            flight = null,
+                    )
+                }
+                val updatedFlight = flight.copy(elapsedMs = flight.elapsedMs + deltaMs)
+                return@update current.copy(
+                        basketAngle = newAngle,
+                        rotationSpeed = smoothedSpeed,
+                        targetRotationSpeed = newTargetSpeed,
+                        flight = updatedFlight,
+                        activeBoost = updatedBoost,
                 )
             }
 
             val updatedFlight = flight.copy(elapsedMs = flight.elapsedMs + deltaMs)
             if (updatedFlight.elapsedMs >= CARROT_FLIGHT_DURATION_MS) {
-                return@update resolveImpact(current.copy(basketAngle = newAngle, rotationSpeed = newSpeed))
+                return@update resolveImpact(
+                        current.copy(
+                                basketAngle = newAngle,
+                                rotationSpeed = smoothedSpeed,
+                                targetRotationSpeed = newTargetSpeed,
+                                activeBoost = updatedBoost,
+                        )
+                )
             }
 
             current.copy(
-                basketAngle = newAngle,
-                rotationSpeed = newSpeed,
-                flight = updatedFlight,
+                    basketAngle = newAngle,
+                    rotationSpeed = smoothedSpeed,
+                    targetRotationSpeed = newTargetSpeed,
+                    flight = updatedFlight,
+                    activeBoost = updatedBoost,
             )
         }
     }
@@ -110,55 +206,112 @@ class GameViewModel @Inject constructor(
         _state.update {
             val nextId = it.throwId + 1
             it.copy(
-                throwId = nextId,
-                flight = CarrotFlight(id = nextId, elapsedMs = 0),
+                    throwId = nextId,
+                    flight = CarrotFlight(id = nextId, elapsedMs = 0),
             )
         }
     }
 
     fun resolveFlightIfReady() {
         _state.update { current ->
-            if (current.flight == null || current.isPaused || !current.running || current.isGameOver) return@update current
+            if (current.flight == null || current.isPaused || !current.running || current.isGameOver
+            )
+                    return@update current
             resolveImpact(current)
         }
     }
 
     private fun resolveImpact(current: GameUiState): GameUiState {
-        val collision = current.carrots.any { pin ->
-            val worldAngle = normalizeAngle(pin.angle + current.basketAngle)
-            angleDistance(worldAngle, TARGET_ANGLE) < COLLISION_THRESHOLD
+        // Check collision with orbiting items first (coins and boosts)
+        val hitItem =
+                current.orbitingItems.firstOrNull { item ->
+                    val worldAngle = normalizeAngle(item.angle + current.basketAngle)
+                    angleDistance(worldAngle, TARGET_ANGLE) < COLLISION_THRESHOLD * 2
+                }
+
+        if (hitItem != null) {
+            // Pin the carrot to rim even when collecting items
+            val pinnedAngle = normalizeAngle(TARGET_ANGLE - current.basketAngle)
+
+            return when (hitItem.type) {
+                ItemType.COIN -> {
+                    // Collect coin and pin carrot
+                    emitEvent(GameEvent.CoinCollected)
+                    current.copy(
+                            coins = current.coins + 5,
+                            orbitingItems = current.orbitingItems.filter { it.id != hitItem.id },
+                            carrots = current.carrots + CarrotPin(pinnedAngle),
+                            flight = null,
+                    )
+                }
+                ItemType.BOOST_X2, ItemType.BOOST_X5 -> {
+                    // Activate boost and pin carrot
+                    val boostMultiplier = if (hitItem.type == ItemType.BOOST_X2) 2 else 5
+                    emitEvent(GameEvent.BoostCollected)
+                    current.copy(
+                            activeBoost = ActiveBoost(boostMultiplier, 12000), // 12 seconds
+                            orbitingItems = current.orbitingItems.filter { it.id != hitItem.id },
+                            carrots = current.carrots + CarrotPin(pinnedAngle),
+                            flight = null,
+                    )
+                }
+            }
         }
 
-        if (collision) {
-            emitEvent(GameEvent.GameOver)
+        // Check collision with pinned carrots
+        val carrotCollision =
+                current.carrots.any { pin ->
+                    val worldAngle = normalizeAngle(pin.angle + current.basketAngle)
+                    angleDistance(worldAngle, TARGET_ANGLE) < COLLISION_THRESHOLD
+                }
+
+        if (carrotCollision) {
+            // Bounce back
             return current.copy(
-                running = false,
-                isGameOver = true,
-                isPaused = false,
-                flight = null,
+                    flight = current.flight?.copy(bouncing = true, elapsedMs = 0),
             )
         }
 
+        // No collision - pin the carrot to rim
         val pinnedAngle = normalizeAngle(TARGET_ANGLE - current.basketAngle)
-        val gainedMultiplier = when {
-            current.score >= 40 -> 6
-            current.score >= 24 -> 3
-            current.score >= 12 -> 2
-            else -> 1
-        }
-        val newMultiplier = maxOf(current.multiplier, gainedMultiplier)
-        val updatedScore = current.score + newMultiplier
-        val updatedCoins = current.coins + if (updatedScore % 5 == 0) newMultiplier else 0
+        val gainedMultiplier =
+                when {
+                    current.score >= 40 -> 6
+                    current.score >= 24 -> 3
+                    current.score >= 12 -> 2
+                    else -> 1
+                }
+
+        val activeMultiplier = current.activeBoost?.multiplier ?: 1
+        val totalMultiplier = maxOf(current.multiplier, gainedMultiplier) * activeMultiplier
+        val updatedScore = current.score + totalMultiplier
+        val updatedCoins = current.coins + if (updatedScore % 5 == 0) totalMultiplier else 0
 
         emitEvent(GameEvent.CoinCollected)
 
+        // Check for win condition
+        if (updatedScore >= current.targetScore) {
+            emitEvent(GameEvent.GameWin)
+            return current.copy(
+                    carrots = current.carrots + CarrotPin(pinnedAngle),
+                    score = updatedScore,
+                    coins = updatedCoins,
+                    multiplier = maxOf(current.multiplier, gainedMultiplier),
+                    running = false,
+                    isGameOver = true,
+                    isWin = true,
+                    isPaused = false,
+                    flight = null,
+            )
+        }
+
         return current.copy(
-            carrots = current.carrots + CarrotPin(pinnedAngle),
-            score = updatedScore,
-            coins = updatedCoins,
-            multiplier = newMultiplier,
-            rotationSpeed = (current.rotationSpeed + 3f).coerceAtMost(ROTATION_SPEED_LIMIT),
-            flight = null,
+                carrots = current.carrots + CarrotPin(pinnedAngle),
+                score = updatedScore,
+                coins = updatedCoins,
+                multiplier = maxOf(current.multiplier, gainedMultiplier),
+                rotationSpeed = (current.rotationSpeed + 3f).coerceAtMost(ROTATION_SPEED_LIMIT),
+                flight = null,
         )
     }
 
@@ -171,16 +324,29 @@ class GameViewModel @Inject constructor(
     }
 
     fun retry() {
+        val orbitingItems = mutableListOf<OrbitingItem>()
+
+        // Add 2-3 coins at random angles
+        val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
+        coinAngles.forEach { angle -> orbitingItems.add(OrbitingItem(angle, ItemType.COIN)) }
+
+        // Add boost items
+        orbitingItems.add(OrbitingItem(60f, ItemType.BOOST_X2))
+        orbitingItems.add(OrbitingItem(240f, ItemType.BOOST_X5))
+
         _state.update {
             GameUiState(
-                running = true,
-                showIntro = false,
-                skin = it.skin,
+                    running = true,
+                    showIntro = false,
+                    skin = it.skin,
+                    orbitingItems = orbitingItems,
+                    targetRotationSpeed = 55f,
             )
         }
     }
 
-    fun currentResult(): GameResult = GameResult(score = _state.value.score, coins = _state.value.coins)
+    fun currentResult(): GameResult =
+            GameResult(score = _state.value.score, coins = _state.value.coins)
 
     fun consumeResult() {
         viewModelScope.launch {
@@ -197,6 +363,8 @@ class GameViewModel @Inject constructor(
 sealed interface GameEvent {
     data object CoinCollected : GameEvent
     data object GameOver : GameEvent
+    data object GameWin : GameEvent
+    data object BoostCollected : GameEvent
 }
 
 private fun angleDistance(a: Float, b: Float): Float {
