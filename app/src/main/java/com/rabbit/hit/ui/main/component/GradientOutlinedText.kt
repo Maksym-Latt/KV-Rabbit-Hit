@@ -27,6 +27,7 @@ fun GradientOutlinedText(
         modifier: Modifier = Modifier,
         fontSize: TextUnit = 44.sp,
         strokeWidth: Float = 5f,
+        strokeColor: Color = Color.White,
         gradientColors: List<Color> = listOf(Color(0xFFF49C47), Color(0xFFF49C47))
 ) {
     val context = LocalContext.current
@@ -54,7 +55,7 @@ fun GradientOutlinedText(
         // ███████ 2️⃣ Контур
         paint.style = android.graphics.Paint.Style.STROKE
         paint.strokeWidth = strokeWidth
-        paint.color = 0xffffffff.toInt()
+        paint.color = strokeColor.toArgb()
         paint.strokeJoin = android.graphics.Paint.Join.ROUND
         drawContext.canvas.nativeCanvas.drawText(text, x, y, paint)
 
@@ -80,6 +81,7 @@ fun GradientOutlinedTextShort(
         modifier: Modifier = Modifier,
         fontSize: TextUnit = 44.sp,
         strokeWidth: Float = 5f,
+        strokeColor: Color = Color.Black,
         gradientColors: List<Color> = listOf(Color(0xFFFFA726), Color(0xFFFF6F00)),
         textAlign: TextAlign = TextAlign.Start,
         horizontalPadding: Dp = 0.dp
@@ -116,7 +118,7 @@ fun GradientOutlinedTextShort(
         // Контур
         paint.style = android.graphics.Paint.Style.STROKE
         paint.strokeWidth = strokeWidth
-        paint.color = 0xFF000000.toInt()
+        paint.color = strokeColor.toArgb()
         paint.strokeJoin = android.graphics.Paint.Join.ROUND
         drawContext.canvas.nativeCanvas.drawText(text, x, y, paint)
 
