@@ -14,8 +14,7 @@ class PlayerProgressRepositoryImpl @Inject constructor(
 
     companion object {
         private const val KEY_COINS = "progress_coins"
-        private const val KEY_LEVEL = "progress_level"
-        private const val KEY_BEST_HEIGHT = "progress_best_height"
+        private const val KEY_BEST_SCORE = "progress_best_score"
         private const val KEY_SELECTED_SKIN = "progress_selected_skin"
         private const val KEY_OWNED_SKINS = "progress_owned_skins"
     }
@@ -23,31 +22,24 @@ class PlayerProgressRepositoryImpl @Inject constructor(
     private val _progress = MutableStateFlow(loadFromPrefs())
     override val progress: StateFlow<PlayerProgress> = _progress.asStateFlow()
 
-    override fun recordFinishedRun(coinsEarned: Int, height: Int, level: Int) {
+    override fun recordFinishedRun(score: Int, coinsEarned: Int) {
         updateProgress { current ->
             val updatedCoins = (current.coins + coinsEarned).coerceAtLeast(0)
-            val updatedBestHeight = maxOf(current.bestHeight, height)
+            val updatedBest = maxOf(current.bestScore, score)
             current.copy(
                 coins = updatedCoins,
-                bestHeight = updatedBestHeight,
-                level = maxOf(current.level, level)
+                bestScore = updatedBest,
             )
         }
     }
 
-    override fun saveLevel(level: Int) {
-        updateProgress { current ->
-            if (level == current.level) current else current.copy(level = level)
-        }
-    }
-
-    override fun selectSkin(skin: EggSkin) {
+    override fun selectSkin(skin: RabbitSkin) {
         updateProgress { current ->
             if (current.ownedSkins.contains(skin)) current.copy(selectedSkin = skin) else current
         }
     }
 
-    override fun buySkin(skin: EggSkin): Boolean {
+    override fun buySkin(skin: RabbitSkin): Boolean {
         var purchased = false
         updateProgress { current ->
             if (current.ownedSkins.contains(skin)) return@updateProgress current
@@ -71,19 +63,17 @@ class PlayerProgressRepositoryImpl @Inject constructor(
 
     private fun loadFromPrefs(): PlayerProgress {
         val coins = prefs.getInt(KEY_COINS, 0)
-        val level = prefs.getInt(KEY_LEVEL, 1).coerceAtLeast(1)
-        val bestHeight = prefs.getInt(KEY_BEST_HEIGHT, 0)
-        val selectedSkinName = prefs.getString(KEY_SELECTED_SKIN, EggSkin.Classic.name)
-        val selectedSkin = EggSkin.entries.firstOrNull { it.name == selectedSkinName } ?: EggSkin.Classic
-        val ownedNames = prefs.getStringSet(KEY_OWNED_SKINS, setOf(EggSkin.Classic.name)).orEmpty()
-        val ownedSkins = ownedNames.mapNotNull { name -> EggSkin.entries.firstOrNull { it.name == name } }.toSet()
-        val ownedWithDefault = ownedSkins.ifEmpty { setOf(EggSkin.Classic) }
+        val best = prefs.getInt(KEY_BEST_SCORE, 0)
+        val selectedSkinName = prefs.getString(KEY_SELECTED_SKIN, RabbitSkin.Classic.name)
+        val selectedSkin = RabbitSkin.entries.firstOrNull { it.name == selectedSkinName } ?: RabbitSkin.Classic
+        val ownedNames = prefs.getStringSet(KEY_OWNED_SKINS, setOf(RabbitSkin.Classic.name)).orEmpty()
+        val ownedSkins = ownedNames.mapNotNull { name -> RabbitSkin.entries.firstOrNull { it.name == name } }.toSet()
+        val ownedWithDefault = ownedSkins.ifEmpty { setOf(RabbitSkin.Classic) }
 
         return PlayerProgress(
             coins = coins,
-            level = level,
-            bestHeight = bestHeight,
-            selectedSkin = if (ownedWithDefault.contains(selectedSkin)) selectedSkin else EggSkin.Classic,
+            bestScore = best,
+            selectedSkin = if (ownedWithDefault.contains(selectedSkin)) selectedSkin else RabbitSkin.Classic,
             ownedSkins = ownedWithDefault
         )
     }
@@ -91,8 +81,7 @@ class PlayerProgressRepositoryImpl @Inject constructor(
     private fun persist(progress: PlayerProgress) {
         prefs.edit()
             .putInt(KEY_COINS, progress.coins)
-            .putInt(KEY_LEVEL, progress.level)
-            .putInt(KEY_BEST_HEIGHT, progress.bestHeight)
+            .putInt(KEY_BEST_SCORE, progress.bestScore)
             .putString(KEY_SELECTED_SKIN, progress.selectedSkin.name)
             .putStringSet(KEY_OWNED_SKINS, progress.ownedSkins.map { it.name }.toSet())
             .apply()
