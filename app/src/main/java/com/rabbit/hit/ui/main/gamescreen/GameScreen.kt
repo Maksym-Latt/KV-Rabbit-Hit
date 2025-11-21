@@ -115,9 +115,8 @@ fun GameScreen(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(state.running, state.isPaused, state.isGameOver) {
-                detectTapGestures(onTap = { offset ->
-                    val center = Offset(size.width / 2f, size.height / 2f)
-                    launchOffset.value = Offset(offset.x - center.x, offset.y - center.y)
+                detectTapGestures(onTap = { _ ->
+                    launchOffset.value = null
                     viewModel.throwCarrot()
                 })
             }
