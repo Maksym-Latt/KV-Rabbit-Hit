@@ -145,6 +145,10 @@ class DefaultAudioController @Inject constructor(
         vibrate(160L)
     }
 
+    override fun playCoinPickup() {
+
+    }
+
     override fun playHit() {
         playEffect(SoundEffect.HIT)
     }
@@ -233,13 +237,6 @@ class DefaultAudioController @Inject constructor(
     private fun Int.toVolume(): Float = (this.coerceIn(0, 100) / 100f).coerceIn(0f, 1f)
 
     private fun vibrate(durationMs: Long) {
-        if (!vibrationEnabled) return
-        val vib = vibrator ?: return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vib.vibrate(durationMs)
-        }
+
     }
 }

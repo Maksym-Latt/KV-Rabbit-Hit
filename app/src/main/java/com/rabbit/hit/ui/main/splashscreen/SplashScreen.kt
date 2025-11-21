@@ -43,12 +43,6 @@ internal fun SplashScreen(progress: Float) {
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.rabbit_win),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth(0.65f),
-                contentScale = ContentScale.FillWidth
-            )
             Spacer(modifier = Modifier.height(12.dp))
             AnimatedLoadingText(modifier = Modifier.padding(bottom = 16.dp))
             GradientProgressBar(

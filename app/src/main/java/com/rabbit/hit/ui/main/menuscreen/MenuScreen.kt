@@ -99,8 +99,7 @@ fun MenuScreen(
                 painter = painterResource(id = state.selectedSkin.previewRes),
                 contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .padding(top = floatOffset.value.dp),
+                    .fillMaxWidth(0.7f),
                 contentScale = ContentScale.Fit
             )
 
