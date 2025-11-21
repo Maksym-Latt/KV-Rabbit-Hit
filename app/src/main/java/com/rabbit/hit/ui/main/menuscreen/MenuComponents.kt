@@ -22,18 +22,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rabbit.hit.R
 import com.rabbit.hit.ui.main.component.GradientOutlinedText
 
+val SeymourFont = FontFamily(Font(R.font.seymour_one_regular))
+
 @Composable
 fun MenuTitle(modifier: Modifier = Modifier) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         GradientOutlinedText(
                 text = "RABBIT",
-                fontSize = 64.sp,
+                fontSize = 54.sp,
                 strokeWidth = 12f,
                 gradientColors =
                         listOf(
@@ -44,7 +48,7 @@ fun MenuTitle(modifier: Modifier = Modifier) {
         )
         GradientOutlinedText(
                 text = "HIT",
-                fontSize = 64.sp,
+                fontSize = 54.sp,
                 strokeWidth = 12f,
                 gradientColors = listOf(Color(0xFFE86A17), Color(0xFFE86A17)),
                 modifier = Modifier.offset(y = (-20).dp)
@@ -69,18 +73,14 @@ fun MenuCoinDisplay(amount: Int, onClick: () -> Unit, modifier: Modifier = Modif
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Image(
-                    painter =
-                            painterResource(
-                                    id = R.drawable.coin_placeholder
-                            ),
-
+                    painter = painterResource(id = R.drawable.ic_coin),
                     contentDescription = "Coins",
                     modifier = Modifier.size(24.dp)
             )
             Text(
                     text = "$amount",
                     color = Color.White,
-                    fontWeight = FontWeight.Bold,
+                    fontFamily = SeymourFont,
                     fontSize = 20.sp
             )
         }
@@ -110,10 +110,9 @@ fun MenuIconButton(
             contentAlignment = Alignment.Center
     ) {
         if (iconRes != null) {
-            Icon(
+            Image(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,
-                    tint = Color.White,
                     modifier = Modifier.size(32.dp)
             )
         } else if (iconVector != null) {
@@ -124,6 +123,34 @@ fun MenuIconButton(
                     modifier = Modifier.size(32.dp)
             )
         }
+    }
+}
+
+@Composable
+fun MenuStoreButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(width = 100.dp, height = 56.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFB04500))
+            .padding(bottom = 6.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFFE67E22), Color(0xFFD35400))
+                )
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_store),
+            contentDescription = null,
+            modifier = Modifier.size(32.dp)
+        )
     }
 }
 
@@ -149,8 +176,7 @@ fun MenuPlayButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 text = "Play",
                 color = Color.White,
                 fontSize = 36.sp,
-                fontWeight = FontWeight.Black,
-
-                )
+                fontFamily = SeymourFont,
+        )
     }
 }

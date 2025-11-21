@@ -37,7 +37,7 @@ fun AnimatedLoadingText(
     GradientOutlinedText(
         text = display,
         modifier = modifier,
-        fontSize = 44.sp,
+        fontSize = 34.sp,
         strokeWidth = 10f
     )
 }

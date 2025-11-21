@@ -43,12 +43,13 @@ internal fun SplashScreen(progress: Float) {
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.weight(6f))
             AnimatedLoadingText(modifier = Modifier.padding(bottom = 16.dp))
             GradientProgressBar(
                 progress = progress,
                 modifier = Modifier.fillMaxWidth()
             )
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
