@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-private const val TARGET_ANGLE = 90f
-private const val COLLISION_THRESHOLD = 12f
+internal const val TARGET_ANGLE = 90f
+internal const val COLLISION_THRESHOLD = 12f
 private const val ROTATION_ACCELERATION = 0.25f
 
 @HiltViewModel
@@ -39,6 +39,7 @@ class GameViewModel @Inject constructor(
         val carrots: List<CarrotPin> = emptyList(),
         val skin: RabbitSkin = RabbitSkin.Classic,
         val throwId: Int = 0,
+        val flyingCarrot: CarrotPin? = null,
     )
 
     private val _state = MutableStateFlow(GameUiState())
@@ -82,6 +83,7 @@ class GameViewModel @Inject constructor(
     fun throwCarrot() {
         val current = _state.value
         if (!current.running || current.isPaused || current.isGameOver) return
+        if (current.flyingCarrot != null) return
 
         val target = TARGET_ANGLE
         val hasCollision = current.carrots.any { pin ->
@@ -107,7 +109,7 @@ class GameViewModel @Inject constructor(
 
         _state.update {
             it.copy(
-                carrots = it.carrots + CarrotPin(newPinAngle),
+                flyingCarrot = CarrotPin(newPinAngle),
                 score = updatedScore,
                 multiplier = newMultiplier,
                 rotationSpeed = it.rotationSpeed + 2f,
@@ -118,12 +120,23 @@ class GameViewModel @Inject constructor(
         emitEvent(GameEvent.CoinCollected)
     }
 
+    fun onCarrotAttached() {
+        _state.update { current ->
+            val pinnedCarrot = current.flyingCarrot ?: return@update current
+            current.copy(
+                carrots = current.carrots + pinnedCarrot,
+                flyingCarrot = null,
+            )
+        }
+    }
+
     private fun gameOver() {
         _state.update {
             it.copy(
                 running = false,
                 isGameOver = true,
                 isPaused = false,
+                flyingCarrot = null,
             )
         }
         emitEvent(GameEvent.GameOver)
@@ -143,6 +156,7 @@ class GameViewModel @Inject constructor(
                 running = true,
                 showIntro = false,
                 skin = it.skin,
+                flyingCarrot = null,
             )
         }
     }

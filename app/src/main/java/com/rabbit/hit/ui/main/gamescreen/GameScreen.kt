@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -56,6 +56,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Offset
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -64,6 +65,7 @@ fun GameScreen(
     skin: com.rabbit.hit.data.progress.RabbitSkin,
     onExitToMenu: (GameResult) -> Unit,
     viewModel: GameViewModel = hiltViewModel(),
+    debugHitboxes: Boolean = DEBUG_DRAW_HITBOXES,
 ) {
     val state by viewModel.state.collectAsState()
     val audio = rememberAudioController()
@@ -138,9 +140,12 @@ fun GameScreen(
                 RotatingBasket(
                     angle = state.basketAngle,
                     carrots = state.carrots,
+                    debugHitboxes = debugHitboxes,
                 )
                 ThrowingCarrot(
                     triggerKey = state.throwId,
+                    isActive = state.flyingCarrot != null,
+                    onAttached = viewModel::onCarrotAttached,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 86.dp)
@@ -217,21 +222,53 @@ private fun GameHud(score: Int, coins: Int, multiplier: Int, onPause: () -> Unit
     }
 }
 
+private const val DEBUG_DRAW_HITBOXES = false
+private val BasketSize = 260.dp
+private val PinnedCarrotSize = 46.dp
+private val ThrowingCarrotSize = 54.dp
+
 @Composable
-private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>) {
-    val basketSize = 260.dp
-    val carrotSize = 46.dp
+private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>, debugHitboxes: Boolean) {
     val density = LocalDensity.current
-    val radiusPx = with(density) { (basketSize / 2).toPx() }
+    val radiusPx = with(density) { (BasketSize / 2).toPx() }
 
     Box(contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(id = R.drawable.central_ellipse),
             contentDescription = null,
             modifier = Modifier
-                .size(basketSize)
+                .size(BasketSize)
                 .rotate(angle)
         )
+        if (debugHitboxes) {
+            androidx.compose.foundation.Canvas(modifier = Modifier.size(BasketSize)) {
+                val strokeWidth = 3.dp.toPx()
+                val targetStart = TARGET_ANGLE - COLLISION_THRESHOLD
+                val sweep = COLLISION_THRESHOLD * 2
+                drawCircle(
+                    color = Color(0x8032CD32),
+                    radius = radiusPx,
+                    style = Stroke(width = strokeWidth)
+                )
+                drawArc(
+                    color = Color(0x8032CD32),
+                    startAngle = targetStart,
+                    sweepAngle = sweep,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth * 1.4f)
+                )
+                carrots.forEach { pin ->
+                    val carrotWorldAngle = pin.angle + angle
+                    drawArc(
+                        color = Color(0x80FF4500),
+                        startAngle = carrotWorldAngle - COLLISION_THRESHOLD,
+                        sweepAngle = sweep,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth)
+                    )
+                }
+            }
+        }
         carrots.forEach { pin ->
             val totalAngle = pin.angle + angle
             val radians = Math.toRadians(totalAngle.toDouble())
@@ -242,7 +279,7 @@ private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>)
                 painter = painterResource(id = R.drawable.carrot),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(carrotSize)
+                    .size(PinnedCarrotSize)
                     .graphicsLayer {
                         translationX = offsetX
                         translationY = offsetY
@@ -254,43 +291,63 @@ private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>)
 }
 
 @Composable
-private fun ThrowingCarrot(triggerKey: Int, modifier: Modifier = Modifier) {
+private fun ThrowingCarrot(
+    triggerKey: Int,
+    isActive: Boolean,
+    onAttached: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val density = LocalDensity.current
-    val travelDistancePx = remember { Animatable(0f) }
+    val progress = remember { Animatable(0f) }
     val scale = remember { Animatable(0f) }
-    val spin = remember { Animatable(0f) }
+    val spin = remember { Animatable(-180f) }
+
+    val startOffset = remember {
+        Offset(0f, with(density) { 200.dp.toPx() })
+    }
+    val radiusPx = remember { with(density) { (BasketSize / 2).toPx() } }
+    val targetOffset = remember {
+        val radians = Math.toRadians(TARGET_ANGLE.toDouble())
+        Offset((cos(radians) * radiusPx).toFloat(), (sin(radians) * radiusPx).toFloat())
+    }
+    val carrotRotation = TARGET_ANGLE + 90f
 
     LaunchedEffect(triggerKey) {
-        if (triggerKey == 0) return@LaunchedEffect
-        val travel = with(density) { 260.dp.toPx() }
+        if (triggerKey == 0 || !isActive) return@LaunchedEffect
         coroutineScope {
             launch { scale.snapTo(0.2f) }
-            launch { travelDistancePx.snapTo(0f) }
-            launch { spin.snapTo(0f) }
+            launch { progress.snapTo(0f) }
+            launch { spin.snapTo(-220f) }
         }
         coroutineScope {
             launch { scale.animateTo(1f, tween(durationMillis = 140, easing = LinearOutSlowInEasing)) }
             launch {
-                travelDistancePx.animateTo(
-                    targetValue = -travel,
+                progress.animateTo(
+                    targetValue = 1f,
                     animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)
                 )
             }
-            launch { spin.animateTo(targetValue = -360f, animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)) }
+            launch { spin.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)) }
         }
-        scale.animateTo(0f, tween(durationMillis = 140, easing = LinearOutSlowInEasing))
+        onAttached()
     }
 
-    if (triggerKey == 0) return
+    if (triggerKey == 0 || !isActive) return
+
+    val animatedOffset = Offset(
+        x = androidx.compose.ui.util.lerp(startOffset.x, targetOffset.x, progress.value),
+        y = androidx.compose.ui.util.lerp(startOffset.y, targetOffset.y, progress.value),
+    )
 
     Image(
         painter = painterResource(id = R.drawable.carrot),
         contentDescription = null,
         modifier = modifier
-            .size(54.dp)
+            .size(ThrowingCarrotSize)
             .graphicsLayer {
-                translationY = travelDistancePx.value
-                rotationZ = spin.value
+                translationX = animatedOffset.x
+                translationY = animatedOffset.y
+                rotationZ = carrotRotation + spin.value
                 val clampedScale = scale.value.coerceIn(0f, 1.2f)
                 scaleX = clampedScale
                 scaleY = clampedScale
