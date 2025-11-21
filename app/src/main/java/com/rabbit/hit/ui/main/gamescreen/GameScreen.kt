@@ -3,23 +3,19 @@ package com.rabbit.hit.ui.main.gamescreen
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,15 +27,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -47,16 +43,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rabbit.hit.R
 import com.rabbit.hit.audio.rememberAudioController
 import com.rabbit.hit.ui.main.component.SecondaryIconButton
-import com.rabbit.hit.ui.main.gamescreen.overlay.GameOverOverlay
 import com.rabbit.hit.ui.main.gamescreen.overlay.GameSettingsOverlay
 import com.rabbit.hit.ui.main.gamescreen.overlay.IntroOverlay
 import com.rabbit.hit.ui.main.gamescreen.overlay.WinOverlay
 import kotlinx.coroutines.delay
 
-// ======================= 🐣 ЭКРАН ИГРЫ =======================
 @Composable
 fun GameScreen(
-    skin: EggSkin,
+    skin: com.rabbit.hit.data.progress.RabbitSkin,
     onExitToMenu: (GameResult) -> Unit,
     viewModel: GameViewModel = hiltViewModel(),
 ) {
@@ -68,8 +62,8 @@ fun GameScreen(
         viewModel.showIntroOnEnter()
     }
 
-    LaunchedEffect(state.running, state.isPaused, state.isGameOver, state.hasWon) {
-        while (state.running && !state.isPaused && !state.isGameOver && !state.hasWon) {
+    LaunchedEffect(state.running, state.isPaused, state.isGameOver) {
+        while (state.running && !state.isPaused && !state.isGameOver) {
             delay(16)
             viewModel.tick()
         }
@@ -78,10 +72,8 @@ fun GameScreen(
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                GameEvent.Jumped -> audio.playJump()
                 GameEvent.CoinCollected -> audio.playCoinPickup()
                 GameEvent.GameOver -> audio.playGameLose()
-                GameEvent.Win -> audio.playGameWin()
             }
         }
     }
@@ -101,153 +93,140 @@ fun GameScreen(
     }
 
     BackHandler(enabled = state.running && !state.showIntro) {
-        if (!state.isPaused && !state.isGameOver) {
-            viewModel.pause()
-        }
+        if (!state.isPaused && !state.isGameOver) viewModel.pause()
     }
 
     Box(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .pointerInput(state.running, state.isPaused, state.isGameOver) {
+                detectTapGestures(onTap = { viewModel.throwCarrot() })
+            }
     ) {
         Image(
-            painter = painterResource(id = R.drawable.bg),
+            painter = painterResource(id = R.drawable.bg_game),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        GameField(
-            state = state,
-            onDrag = viewModel::movePlayer
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
+            GameHud(
+                score = state.score,
+                coins = state.coins,
+                multiplier = state.multiplier,
+                onPause = viewModel::pause
+            )
 
-        GameHud(
-            coins = state.coins,
-            height = state.height,
-            onPause = viewModel::pause
-        )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                RotatingBasket(
+                    angle = state.basketAngle,
+                    carrots = state.carrots,
+                )
+                Image(
+                    painter = painterResource(id = skin.gameRes),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp)
+                        .size(200.dp),
+                    contentScale = ContentScale.Fit
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.carrot),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 90.dp)
+                        .size(46.dp)
+                )
+            }
+        }
 
         if (state.showIntro) {
-            IntroOverlay(
-                level = state.level,
-                targetCoins = state.targetCoins,
-                onStart = viewModel::startRun
-            )
+            IntroOverlay(onStart = viewModel::startRun)
         }
 
         if (state.isPaused && !state.isGameOver) {
             GameSettingsOverlay(
                 onResume = viewModel::resume,
-                onRetry = { viewModel.retry() },
+                onRetry = viewModel::retry,
                 onHome = { onExitToMenu(viewModel.currentResult()) }
             )
         }
 
-        if (state.hasWon) {
+        if (state.isGameOver) {
             WinOverlay(
                 result = viewModel.currentResult(),
-                onNextLevel = viewModel::advanceToNextLevel,
+                isWin = false,
+                onRetry = viewModel::retry,
                 onHome = {
                     val result = viewModel.currentResult()
-                    viewModel.advanceToNextLevel()
+                    viewModel.consumeResult()
                     onExitToMenu(result)
                 }
-            )
-        } else if (state.isGameOver) {
-            GameOverOverlay(
-                result = viewModel.currentResult(),
-                targetCoins = state.targetCoins,
-                onRetry = { viewModel.retry() },
-                onHome = { onExitToMenu(viewModel.currentResult()) }
             )
         }
     }
 }
 
 @Composable
-private fun GameHud(
-    coins: Int,
-    height: Int,
-    onPause: () -> Unit,
-) {
-    val cardShape = RoundedCornerShape(24.dp)
-
-    Box(
+private fun GameHud(score: Int, coins: Int, multiplier: Int, onPause: () -> Unit) {
+    val shape = RoundedCornerShape(24.dp)
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp).windowInsetsPadding(WindowInsets.displayCutout)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .clip(shape)
+            .background(
+                Brush.horizontalGradient(
+                    listOf(Color(0xFFFFB95F), Color(0xFFFFD196))
+                )
+            )
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Image(painter = painterResource(id = R.drawable.coin_placeholder), contentDescription = null, modifier = Modifier.size(26.dp))
+            Text(text = "$coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "$score", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+            Text(text = "x$multiplier", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        }
+
+        SecondaryIconButton(onClick = onPause, modifier = Modifier.size(48.dp)) {
+            Icon(imageVector = Icons.Default.Pause, contentDescription = null, tint = Color.White, modifier = Modifier.fillMaxSize(0.7f))
+        }
+    }
+}
+
+@Composable
+private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>) {
+    Box(contentAlignment = Alignment.Center) {
+        Image(
+            painter = painterResource(id = R.drawable.central_ellipse),
+            contentDescription = null,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .shadow(
-                    elevation = 10.dp,
-                    shape = cardShape,
-                    clip = false,
-                    ambientColor = Color(0x33000000),
-                    spotColor = Color(0x33000000)
-                )
-                .clip(cardShape)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xFFE9D7FF),
-                            Color(0xFFFFE6CF)
-                        )
-                    )
-                )
-                .padding(horizontal = 18.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // --- монеты ---
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.coin),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = "x$coins",
-                    color = Color(0xFF7B4A2D),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(start = 6.dp)
-                )
-            }
-
-            // --- высота + стрелка вверх ---
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "${height}m",
-                    color = Color(0xFF7B4A2D),
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 18.sp
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowUpward,
-                    contentDescription = null,
-                    tint = Color(0xFF7B4A2D),
-                    modifier = Modifier
-                        .padding(start = 2.dp)
-                        .size(18.dp)
-                )
-            }
-
-            // --- кнопка паузы в круге ---
-            SecondaryIconButton(
-                onClick = onPause,
-                modifier = Modifier.size(46.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Pause,
-                    contentDescription = "Pause",
-                    tint = Color(0xFFFF9154),
-                    modifier = Modifier.fillMaxSize(0.7f)
-                )
-            }
+                .size(260.dp)
+                .rotate(angle)
+        )
+        carrots.forEach { pin ->
+            Image(
+                painter = painterResource(id = R.drawable.carrot),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(46.dp)
+                    .rotate(pin.angle + angle)
+                    .offset(y = (-160).dp)
+            )
         }
     }
 }

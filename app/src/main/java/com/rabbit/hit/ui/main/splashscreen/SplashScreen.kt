@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -16,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.Composable
 import com.rabbit.hit.R
 
 @Composable
@@ -26,11 +26,17 @@ internal fun SplashScreen(progress: Float) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFFFF4FF), Color(0xFFFFE0D2), Color(0xFFFFD9C5))
+                    listOf(Color(0xFF6BC1FF), Color(0xFF8EE98B))
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.bg_loading),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -38,19 +44,12 @@ internal fun SplashScreen(progress: Float) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(id = R.drawable.title_chicken),
+                painter = painterResource(id = R.drawable.rabbit_win),
                 contentDescription = null,
                 modifier = Modifier.fillMaxWidth(0.65f),
                 contentScale = ContentScale.FillWidth
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Image(
-                painter = painterResource(id = R.drawable.title_text),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth(0.7f),
-                contentScale = ContentScale.FillWidth
-            )
-            Spacer(modifier = Modifier.height(20.dp))
             AnimatedLoadingText(modifier = Modifier.padding(bottom = 16.dp))
             GradientProgressBar(
                 progress = progress,

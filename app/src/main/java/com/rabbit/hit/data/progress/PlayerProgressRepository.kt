@@ -5,8 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface PlayerProgressRepository {
     val progress: StateFlow<PlayerProgress>
 
-    fun recordFinishedRun(coinsEarned: Int, height: Int, level: Int)
-    fun saveLevel(level: Int)
-    fun selectSkin(skin: EggSkin)
-    fun buySkin(skin: EggSkin): Boolean
+    fun recordFinishedRun(score: Int, coinsEarned: Int)
+    fun selectSkin(skin: RabbitSkin)
+    fun buySkin(skin: RabbitSkin): Boolean
 }
