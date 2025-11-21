@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -128,43 +128,22 @@ fun GameScreen(
             contentScale = ContentScale.Crop
         )
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            GameHud(
-                score = state.score,
-                coins = state.coins,
-                multiplier = state.multiplier,
-                onPause = viewModel::pause
-            )
+        GameHud(
+            score = state.score,
+            coins = state.coins,
+            multiplier = state.multiplier,
+            onPause = viewModel::pause,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                RotatingBasket(
-                    angle = state.basketAngle,
-                    carrots = state.carrots,
-                    debugHitboxes = debugHitboxes,
-                )
-                ThrowingCarrot(
-                    triggerKey = state.flight?.id ?: 0,
-                    isActive = state.flight != null,
-                    startOffset = launchOffset.value,
-                    onFlightFinished = viewModel::resolveFlightIfReady,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-                Image(
-                    painter = painterResource(id = skin.gameRes),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 24.dp)
-                        .size(200.dp),
-                    contentScale = ContentScale.Fit
-                )
-            }
-        }
+        Playfield(
+            state = state,
+            startOffset = launchOffset.value,
+            onFlightFinished = viewModel::resolveFlightIfReady,
+            debugHitboxes = debugHitboxes,
+            skin = skin,
+            modifier = Modifier.fillMaxSize()
+        )
 
         if (state.showIntro) {
             IntroOverlay(onStart = viewModel::startRun)
@@ -194,35 +173,148 @@ fun GameScreen(
 }
 
 @Composable
-private fun GameHud(score: Int, coins: Int, multiplier: Int, onPause: () -> Unit) {
-    val shape = RoundedCornerShape(24.dp)
+private fun GameHud(
+    score: Int,
+    coins: Int,
+    multiplier: Int,
+    onPause: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp)
-            .clip(shape)
-            .background(
-                Brush.horizontalGradient(
-                    listOf(Color(0xFFFFB95F), Color(0xFFFFD196))
-                )
-            )
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Image(painter = painterResource(id = R.drawable.coin_placeholder), contentDescription = null, modifier = Modifier.size(26.dp))
-            Text(text = "$coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+        OrangePill {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.coin_placeholder),
+                    contentDescription = null,
+                    modifier = Modifier.size(26.dp)
+                )
+                Text(text = "$coins", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+            }
         }
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "$score", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-            Text(text = "x$multiplier", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        OrangePill(shape = RoundedCornerShape(18.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)) {
+                Text(text = "$score", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                Text(text = "x$multiplier", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
         }
 
-        SecondaryIconButton(onClick = onPause, modifier = Modifier.size(48.dp)) {
+        SecondaryIconButton(onClick = onPause, modifier = Modifier.size(52.dp)) {
             Icon(imageVector = Icons.Default.Pause, contentDescription = null, tint = Color.White, modifier = Modifier.fillMaxSize(0.7f))
         }
+    }
+}
+
+@Composable
+private fun OrangePill(
+    shape: RoundedCornerShape = RoundedCornerShape(16.dp),
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .clip(shape)
+            .background(Color(0xFFFFA53A))
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        content = content
+    )
+}
+
+@Composable
+private fun Playfield(
+    state: GameViewModel.GameUiState,
+    startOffset: Offset?,
+    onFlightFinished: () -> Unit,
+    debugHitboxes: Boolean,
+    skin: com.rabbit.hit.data.progress.RabbitSkin,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 64.dp)
+                .fillMaxWidth()
+                .height(420.dp),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            RotatingBasket(
+                angle = state.basketAngle,
+                carrots = state.carrots,
+                debugHitboxes = debugHitboxes,
+            )
+            ThrowingCarrot(
+                triggerKey = state.flight?.id ?: 0,
+                isActive = state.flight != null,
+                startOffset = startOffset,
+                onFlightFinished = onFlightFinished,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 12.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = skin.gameRes),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(bottom = 6.dp)
+                    .size(190.dp),
+                contentScale = ContentScale.Fit
+            )
+            CarrotPile()
+        }
+    }
+}
+
+@Composable
+private fun CarrotPile() {
+    Box(
+        modifier = Modifier
+            .padding(start = 12.dp)
+            .size(width = 90.dp, height = 80.dp)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.carrot),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(46.dp)
+                .rotate(-8f),
+            contentScale = ContentScale.Fit
+        )
+        Image(
+            painter = painterResource(id = R.drawable.carrot),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 8.dp)
+                .size(50.dp)
+                .rotate(12f),
+            contentScale = ContentScale.Fit
+        )
+        Image(
+            painter = painterResource(id = R.drawable.carrot),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(42.dp)
+                .rotate(-24f),
+            contentScale = ContentScale.Fit
+        )
     }
 }
 
@@ -287,7 +379,7 @@ private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>,
                     .graphicsLayer {
                         translationX = offsetX
                         translationY = offsetY
-                        rotationZ = totalAngle + 90f
+                        rotationZ = totalAngle + 270f
                     },
             )
         }
@@ -312,7 +404,7 @@ private fun ThrowingCarrot(
         val radians = Math.toRadians(TARGET_ANGLE.toDouble())
         Offset((cos(radians) * radiusPx).toFloat(), (sin(radians) * radiusPx).toFloat())
     }
-    val carrotRotation = TARGET_ANGLE + 90f
+    val carrotRotation = TARGET_ANGLE + 270f
 
     LaunchedEffect(triggerKey) {
         if (triggerKey == 0 || !isActive) return@LaunchedEffect
