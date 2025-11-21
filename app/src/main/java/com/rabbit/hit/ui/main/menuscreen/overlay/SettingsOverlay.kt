@@ -1,35 +1,50 @@
 package com.rabbit.hit.ui.main.menuscreen.overlay
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.MusicOff
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rabbit.hit.R
 import com.rabbit.hit.ui.main.component.GradientOutlinedText
-import com.rabbit.hit.ui.main.component.SecondaryBackButton
+import com.rabbit.hit.ui.main.component.MenuIconButton
+import com.rabbit.hit.ui.main.component.SeymourFont
+import com.rabbit.hit.ui.main.menuscreen.overlay.ShopButtonType.EQUIP
 import com.rabbit.hit.ui.main.settings.SettingsViewModel
 
 @Composable
@@ -38,108 +53,178 @@ fun SettingsOverlay(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    var graphicsQuality by rememberSaveable { mutableStateOf(GraphicsQuality.MEDIUM) }
 
-    val panelShape = RoundedCornerShape(26.dp)
-
-    val panelGradient = Brush.verticalGradient(
-        listOf(
-            Color(0xff78318a),
-            Color(0xffb02d87),
-            Color(0xffd57aa1)
-        )
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x99aa9393))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onClose() }
-    ) {
-        // ---------- BACK BUTTON ---------- //
-        SecondaryBackButton(
-            onClick = onClose,
-            modifier = Modifier
-                .padding(start = 20.dp, top = 24.dp)
-                .size(58.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.bg_game),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
 
-        // ---------- CENTER PANEL ---------- //
-        Box(
+        Column(
             modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth(0.78f)
-                .clip(panelShape)
-                .background(panelGradient)
-                .padding(horizontal = 28.dp, vertical = 24.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {}
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(18.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
             ) {
-                GradientOutlinedText(
-                    text = "SETTINGS",
-                    fontSize = 30.sp,
-                    gradientColors = listOf(Color.White, Color.White)
+                MenuIconButton(
+                    iconVector = Icons.Default.ArrowBack,
+                    onClick = onClose
                 )
+            }
 
-                ToggleRow(
-                    title = "MUSIC",
-                    checked = ui.musicVolume > 0,
-                    onCheckedChange = viewModel::toggleMusic
-                )
-                ToggleRow(
-                    title = "SOUNDS",
-                    checked = ui.soundVolume > 0,
-                    onCheckedChange = viewModel::toggleSound
-                )
-                ToggleRow(
-                    title = "VIBRATION",
-                    checked = ui.vibrationEnabled,
-                    onCheckedChange = viewModel::toggleVibration
-                )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0xFFFFE7C6),
+                                    Color(0xFFFFC778),
+                                    Color(0xFFE57414)
+                                )
+                            )
+                        )
+                        .padding(horizontal = 24.dp, vertical = 26.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        GradientOutlinedText(
+                            text = "Settings",
+                            fontSize = 36.sp,
+                            strokeWidth = 10f,
+                            strokeColor = Color(0xFFFFF2D4),
+                            gradientColors = listOf(Color(0xFFFFF9E7), Color(0xFFFEF3D2))
+                        )
+
+                        SettingToggleRow(
+                            title = "Sound",
+                            checked = ui.soundVolume > 0,
+                            onToggle = viewModel::toggleSound,
+                            iconOn = Icons.Default.VolumeUp,
+                            iconOff = Icons.Default.VolumeOff
+                        )
+
+                        SettingToggleRow(
+                            title = "Music",
+                            checked = ui.musicVolume > 0,
+                            onToggle = viewModel::toggleMusic,
+                            iconOn = Icons.Default.MusicNote,
+                            iconOff = Icons.Default.MusicOff
+                        )
+
+                        SettingToggleRow(
+                            title = "Vibration",
+                            checked = ui.vibrationEnabled,
+                            onToggle = viewModel::toggleVibration,
+                            iconOn = Icons.Default.Vibration,
+                            iconOff = Icons.Default.Vibration
+                        )
+
+                        GraphicsQualityRow(
+                            quality = graphicsQuality,
+                            onNext = { graphicsQuality = graphicsQuality.next() }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ToggleRow(
+private fun SettingToggleRow(
     title: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onToggle: (Boolean) -> Unit,
+    iconOn: androidx.compose.ui.graphics.vector.ImageVector,
+    iconOff: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.15f))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0x33FFFFFF))
+            .clickable { onToggle(!checked) }
+            .padding(horizontal = 18.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
-            color = Color.White,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold
+            color = Color(0xFF8D4200),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = SeymourFont
         )
 
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color(0xFFFFF4CA),
-                checkedTrackColor = Color(0xFFFF9DD0),
-                uncheckedThumbColor = Color(0xFFE8E0FF),
-                uncheckedTrackColor = Color(0xFF9D75C5)
-            )
+        MenuIconButton(
+            iconVector = if (checked) iconOn else iconOff,
+            onClick = { onToggle(!checked) },
+            modifier = Modifier.graphicsLayer(alpha = if (checked) 1f else 0.55f)
         )
     }
+}
+
+@Composable
+private fun GraphicsQualityRow(
+    quality: GraphicsQuality,
+    onNext: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0x33FFFFFF))
+            .padding(horizontal = 18.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Graphics Quality",
+            color = Color(0xFF8D4200),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = SeymourFont
+        )
+
+        Box(modifier = Modifier.size(width = 140.dp, height = 50.dp)) {
+            ShopActionButton(
+                text = quality.label,
+                type = EQUIP,
+                onClick = onNext
+            )
+        }
+    }
+}
+
+private enum class GraphicsQuality(val label: String) {
+    LOW("Low"),
+    MEDIUM("Med"),
+    HIGH("High");
+
+    fun next(): GraphicsQuality =
+        when (this) {
+            LOW -> MEDIUM
+            MEDIUM -> HIGH
+            HIGH -> LOW
+        }
 }
