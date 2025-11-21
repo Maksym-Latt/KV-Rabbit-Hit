@@ -56,6 +56,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.platform.LocalDensity
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun GameScreen(
@@ -217,22 +219,35 @@ private fun GameHud(score: Int, coins: Int, multiplier: Int, onPause: () -> Unit
 
 @Composable
 private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>) {
+    val basketSize = 260.dp
+    val carrotSize = 46.dp
+    val density = LocalDensity.current
+    val radiusPx = with(density) { (basketSize / 2).toPx() }
+
     Box(contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(id = R.drawable.central_ellipse),
             contentDescription = null,
             modifier = Modifier
-                .size(260.dp)
+                .size(basketSize)
                 .rotate(angle)
         )
         carrots.forEach { pin ->
+            val totalAngle = pin.angle + angle
+            val radians = Math.toRadians(totalAngle.toDouble())
+            val offsetX = (cos(radians) * radiusPx).toFloat()
+            val offsetY = (sin(radians) * radiusPx).toFloat()
+
             Image(
                 painter = painterResource(id = R.drawable.carrot),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(46.dp)
-                    .rotate(pin.angle + angle)
-                    .offset(y = (-160).dp)
+                    .size(carrotSize)
+                    .graphicsLayer {
+                        translationX = offsetX
+                        translationY = offsetY
+                        rotationZ = totalAngle + 90f
+                    },
             )
         }
     }
