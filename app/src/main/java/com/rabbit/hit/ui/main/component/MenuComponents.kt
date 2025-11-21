@@ -27,6 +27,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rabbit.hit.R
@@ -159,28 +162,46 @@ fun MenuStoreButton(
 
 @Composable
 fun MenuPlayButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    MenuActionButton(
+        text = "Play",
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(0.8f),
+        height = 80.dp,
+        fontSize = 36.sp
+    )
+}
+
+@Composable
+fun MenuActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    height: Dp = 72.dp,
+    fontSize: TextUnit = 30.sp,
+    cornerRadius: Dp = 20.dp,
+    gradient: Brush =
+        Brush.verticalGradient(
+            listOf(Color(0xFFE67E22), Color(0xFFD35400))
+        ),
+) {
     Box(
         modifier =
             modifier
-                .fillMaxWidth(0.8f)
-                .height(80.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .height(height)
+                .clip(RoundedCornerShape(cornerRadius))
                 .background(Color(0xFFB04500))
                 .padding(bottom = 8.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color(0xFFE67E22), Color(0xFFD35400))
-                    )
-                )
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(gradient)
                 .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Play",
+            text = text,
             color = Color.White,
-            fontSize = 36.sp,
+            fontSize = fontSize,
             fontFamily = SeymourFont,
+            fontWeight = FontWeight.Bold
         )
     }
 }

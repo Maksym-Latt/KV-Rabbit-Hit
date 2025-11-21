@@ -11,13 +11,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -35,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -51,6 +54,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rabbit.hit.R
 import com.rabbit.hit.audio.rememberAudioController
+import com.rabbit.hit.ui.main.component.MenuCoinDisplay
+import com.rabbit.hit.ui.main.component.MenuIconButton
+import com.rabbit.hit.ui.main.component.SeymourFont
 import com.rabbit.hit.ui.main.gamescreen.overlay.GameSettingsOverlay
 import com.rabbit.hit.ui.main.gamescreen.overlay.IntroOverlay
 import com.rabbit.hit.ui.main.gamescreen.overlay.WinOverlay
@@ -190,70 +196,69 @@ private fun GameHud(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.displayCutout)
+                    .padding(horizontal = 16.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        OrangePill {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.coin_placeholder),
-                    contentDescription = null,
-                    modifier = Modifier.size(26.dp)
-                )
-                Text(
-                    text = "$coins",
-                    color = Color.White,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp
-                )
-            }
+        MenuCoinDisplay(amount = coins, onClick = {}, modifier = Modifier.weight(1f, fill = false))
+
+        GameScoreBadge(
+            score = score,
+            targetScore = targetScore,
+            multiplier = multiplier,
+            modifier = Modifier.weight(1f)
+        )
+
+        Box(modifier = Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
+            MenuIconButton(iconVector = Icons.Default.Pause, onClick = onPause)
         }
-
-        OrangePill(shape = RoundedCornerShape(18.dp)) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = "$score / $targetScore",
-                    color = Color.White,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 22.sp
-                )
-                Text(
-                    text = "x$multiplier",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
-        }
-
-
     }
 }
 
 @Composable
-private fun OrangePill(
-    shape: RoundedCornerShape = RoundedCornerShape(16.dp),
-    content: @Composable RowScope.() -> Unit,
+private fun GameScoreBadge(
+    score: Int,
+    targetScore: Int,
+    multiplier: Int,
+    modifier: Modifier = Modifier
 ) {
-    Row(
+    Box(
         modifier =
-            Modifier
-                    .clip(shape)
-                    .background(Color(0xFFFFA53A))
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        content = content
-    )
+            modifier
+                    .padding(horizontal = 12.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color(0xFFB04500))
+                    .padding(bottom = 8.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFFFFC85C), Color(0xFFFF9340))
+                        )
+                    )
+                    .padding(horizontal = 22.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "$score",
+                color = Color.White,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 32.sp,
+                fontFamily = SeymourFont
+            )
+            Text(
+                text = "Goal $targetScore  |  x$multiplier",
+                color = Color(0xFFFFF2D4),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                fontFamily = SeymourFont
+            )
+        }
+    }
 }
 
 @Composable
