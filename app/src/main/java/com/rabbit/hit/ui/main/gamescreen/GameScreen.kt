@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +54,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.geometry.Offset
@@ -109,11 +110,17 @@ fun GameScreen(
         if (!state.isPaused && !state.isGameOver) viewModel.pause()
     }
 
+    val launchOffset = remember { mutableStateOf<Offset?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(state.running, state.isPaused, state.isGameOver) {
-                detectTapGestures(onTap = { viewModel.throwCarrot() })
+                detectTapGestures(onTap = { offset ->
+                    val center = Offset(size.width / 2f, size.height / 2f)
+                    launchOffset.value = Offset(offset.x - center.x, offset.y - center.y)
+                    viewModel.throwCarrot()
+                })
             }
     ) {
         Image(
@@ -143,12 +150,11 @@ fun GameScreen(
                     debugHitboxes = debugHitboxes,
                 )
                 ThrowingCarrot(
-                    triggerKey = state.throwId,
-                    isActive = state.flyingCarrot != null,
-                    onAttached = viewModel::onCarrotAttached,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 86.dp)
+                    triggerKey = state.flight?.id ?: 0,
+                    isActive = state.flight != null,
+                    startOffset = launchOffset.value,
+                    onFlightFinished = viewModel::resolveFlightIfReady,
+                    modifier = Modifier.align(Alignment.Center)
                 )
                 Image(
                     painter = painterResource(id = skin.gameRes),
@@ -294,17 +300,17 @@ private fun RotatingBasket(angle: Float, carrots: List<GameViewModel.CarrotPin>,
 private fun ThrowingCarrot(
     triggerKey: Int,
     isActive: Boolean,
-    onAttached: () -> Unit,
+    startOffset: Offset?,
+    onFlightFinished: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     val progress = remember { Animatable(0f) }
     val scale = remember { Animatable(0f) }
     val spin = remember { Animatable(-180f) }
+    val defaultStartOffset = remember { Offset(0f, with(density) { 220.dp.toPx() }) }
+    val animatedStart = remember { mutableStateOf(defaultStartOffset) }
 
-    val startOffset = remember {
-        Offset(0f, with(density) { 200.dp.toPx() })
-    }
     val radiusPx = remember { with(density) { (BasketSize / 2).toPx() } }
     val targetOffset = remember {
         val radians = Math.toRadians(TARGET_ANGLE.toDouble())
@@ -314,29 +320,36 @@ private fun ThrowingCarrot(
 
     LaunchedEffect(triggerKey) {
         if (triggerKey == 0 || !isActive) return@LaunchedEffect
+        animatedStart.value = startOffset ?: defaultStartOffset
+
         coroutineScope {
             launch { scale.snapTo(0.2f) }
             launch { progress.snapTo(0f) }
             launch { spin.snapTo(-220f) }
         }
         coroutineScope {
-            launch { scale.animateTo(1f, tween(durationMillis = 140, easing = LinearOutSlowInEasing)) }
+            launch { scale.animateTo(1f, tween(durationMillis = 140, easing = LinearEasing)) }
             launch {
                 progress.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)
+                    animationSpec = tween(durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(), easing = FastOutSlowInEasing)
+                )
+                onFlightFinished()
+            }
+            launch {
+                spin.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(), easing = FastOutSlowInEasing)
                 )
             }
-            launch { spin.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)) }
         }
-        onAttached()
     }
 
     if (triggerKey == 0 || !isActive) return
 
     val animatedOffset = Offset(
-        x = androidx.compose.ui.util.lerp(startOffset.x, targetOffset.x, progress.value),
-        y = androidx.compose.ui.util.lerp(startOffset.y, targetOffset.y, progress.value),
+        x = androidx.compose.ui.util.lerp(animatedStart.value.x, targetOffset.x, progress.value),
+        y = androidx.compose.ui.util.lerp(animatedStart.value.y, targetOffset.y, progress.value),
     )
 
     Image(
