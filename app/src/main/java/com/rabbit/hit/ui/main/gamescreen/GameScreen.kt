@@ -53,7 +53,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.platform.LocalDensity
@@ -305,9 +304,7 @@ private fun ThrowingCarrot(
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    val progress = remember { Animatable(0f) }
-    val scale = remember { Animatable(0f) }
-    val spin = remember { Animatable(-180f) }
+    val progress = remember(triggerKey) { Animatable(0f) }
     val defaultStartOffset = remember { Offset(0f, with(density) { 220.dp.toPx() }) }
     val animatedStart = remember { mutableStateOf(defaultStartOffset) }
 
@@ -323,24 +320,16 @@ private fun ThrowingCarrot(
         animatedStart.value = startOffset ?: defaultStartOffset
 
         coroutineScope {
-            launch { scale.snapTo(0.2f) }
             launch { progress.snapTo(0f) }
-            launch { spin.snapTo(-220f) }
-        }
-        coroutineScope {
-            launch { scale.animateTo(1f, tween(durationMillis = 140, easing = LinearEasing)) }
             launch {
                 progress.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(), easing = FastOutSlowInEasing)
+                    animationSpec = tween(
+                        durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(),
+                        easing = LinearEasing
+                    )
                 )
                 onFlightFinished()
-            }
-            launch {
-                spin.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(), easing = FastOutSlowInEasing)
-                )
             }
         }
     }
@@ -360,10 +349,7 @@ private fun ThrowingCarrot(
             .graphicsLayer {
                 translationX = animatedOffset.x
                 translationY = animatedOffset.y
-                rotationZ = carrotRotation + spin.value
-                val clampedScale = scale.value.coerceIn(0f, 1.2f)
-                scaleX = clampedScale
-                scaleY = clampedScale
+                rotationZ = carrotRotation
             },
         contentScale = ContentScale.Fit
     )

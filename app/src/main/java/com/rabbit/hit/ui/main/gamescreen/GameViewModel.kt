@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 internal const val TARGET_ANGLE = 90f
 internal const val COLLISION_THRESHOLD = 5f
-internal const val CARROT_FLIGHT_DURATION_MS = 450L
+internal const val CARROT_FLIGHT_DURATION_MS = 220L
 private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
 
