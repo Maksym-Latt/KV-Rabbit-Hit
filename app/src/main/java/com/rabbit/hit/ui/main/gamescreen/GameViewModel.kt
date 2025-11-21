@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal const val TARGET_ANGLE = 90f
-internal const val COLLISION_THRESHOLD = 12f
+internal const val COLLISION_THRESHOLD = 8f
 private const val ROTATION_ACCELERATION = 0.25f
 
 @HiltViewModel
