@@ -95,7 +95,7 @@ constructor(
         val orbitingItems = mutableListOf<OrbitingItem>()
         val sticks = generateSticks()
 
-        val targetScore = (BASE_TARGET_SCORE - sticks.size * 2).coerceAtLeast(1)
+        val targetScore = (BASE_TARGET_SCORE - (sticks.size * 3)).coerceAtLeast(1)
 
         // Add 2-3 coins at random angles
         val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
