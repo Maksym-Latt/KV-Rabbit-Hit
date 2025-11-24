@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal const val TARGET_ANGLE = 90f
-internal const val COLLISION_THRESHOLD = 6f
+internal const val COLLISION_THRESHOLD = 8f
 internal const val CARROT_FLIGHT_DURATION_MS = 110L
 private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
@@ -378,6 +378,6 @@ private fun angleDistance(a: Float, b: Float): Float {
 private fun normalizeAngle(angle: Float): Float = (angle % 360f + 360f) % 360f
 
 private fun calculateTargetScore(): Int {
-    val idealCarrots = (360f / (COLLISION_THRESHOLD * 2)).toInt()
+    val idealCarrots = (360f / (COLLISION_THRESHOLD)).toInt()
     return (idealCarrots * 0.8f).toInt().coerceAtLeast(1)
 }

@@ -28,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rabbit.hit.R
-import com.rabbit.hit.ui.main.component.AutoSizeGradientOutlinedText
 import com.rabbit.hit.ui.main.gamescreen.GameResult
 import com.rabbit.hit.ui.main.component.GradientOutlinedText
 import com.rabbit.hit.ui.main.component.MenuActionButton
