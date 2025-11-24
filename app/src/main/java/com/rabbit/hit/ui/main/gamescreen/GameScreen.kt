@@ -3,6 +3,10 @@ package com.rabbit.hit.ui.main.gamescreen
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -77,6 +81,19 @@ fun GameScreen(
     val state by viewModel.state.collectAsState()
     val audio = rememberAudioController()
 
+    val backgroundMotion = rememberInfiniteTransition(label = "game_parallax")
+    val backgroundShift by
+        backgroundMotion.animateFloat(
+            initialValue = -10f,
+            targetValue = 10f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(5200, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+            label = "bg_shift"
+        )
+
     LaunchedEffect(skin) {
         viewModel.setSkin(skin)
         viewModel.showIntroOnEnter()
@@ -142,7 +159,13 @@ fun GameScreen(
         Image(
             painter = painterResource(id = R.drawable.bg_game),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        translationX = backgroundShift
+                        translationY = backgroundShift / 3f
+                    },
             contentScale = ContentScale.Crop
         )
 
@@ -272,6 +295,19 @@ private fun ActiveBoostBar(boost: GameViewModel.ActiveBoost) {
         (boost.remainingMs.toFloat() / boost.totalDurationMs.toFloat()).coerceIn(0f, 1f)
     val boostColor = if (boost.multiplier == 2) Color(0xFF4CAF50) else Color(0xFFFF9800)
 
+    val shimmerTransition = rememberInfiniteTransition(label = "boost_shimmer")
+    val shimmerOffset by
+        shimmerTransition.animateFloat(
+            initialValue = -60f,
+            targetValue = 80f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(1100, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                ),
+            label = "boost_offset"
+        )
+
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -324,6 +360,22 @@ private fun ActiveBoostBar(boost: GameViewModel.ActiveBoost) {
                                                     )
                                             )
                                     )
+                    )
+                    Box(
+                        modifier =
+                            Modifier
+                                .matchParentSize()
+                                .graphicsLayer { translationX = shimmerOffset }
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0f),
+                                            Color.White.copy(alpha = 0.35f),
+                                            Color.White.copy(alpha = 0f)
+                                        )
+                                    )
+                                )
                     )
                 }
             }
@@ -636,39 +688,38 @@ private fun ThrowingCarrot(
         onFlightFinished()
     }
 
-    val currentPosition =
-        if (isBouncing) {
-            val bounceDownPosition = Offset(0f, with(density) { 600.dp.toPx() })
-            Offset(
-                x =
-                    androidx.compose.ui.util.lerp(
-                        basketRimPosition.x,
-                        bounceDownPosition.x,
-                        progress.value
-                    ),
-                y =
-                    androidx.compose.ui.util.lerp(
-                        basketRimPosition.y,
-                        bounceDownPosition.y,
-                        progress.value
-                    )
-            )
-        } else {
-            Offset(
-                x =
-                    androidx.compose.ui.util.lerp(
-                        rabbitPosition.x,
-                        basketRimPosition.x,
-                        progress.value
-                    ),
-                y =
-                    androidx.compose.ui.util.lerp(
-                        rabbitPosition.y,
-                        basketRimPosition.y,
-                        progress.value
-                    )
-            )
-        }
+    val startPoint = if (isBouncing) basketRimPosition else rabbitPosition
+    val targetPoint =
+        if (isBouncing) Offset(0f, with(density) { 600.dp.toPx() }) else basketRimPosition
+
+    fun positionFor(progressValue: Float): Offset {
+        val clamped = progressValue.coerceIn(0f, 1f)
+        return Offset(
+            x = androidx.compose.ui.util.lerp(startPoint.x, targetPoint.x, clamped),
+            y = androidx.compose.ui.util.lerp(startPoint.y, targetPoint.y, clamped)
+        )
+    }
+
+    val currentPosition = positionFor(progress.value)
+    val trailFractions = listOf(0.25f, 0.5f, 0.75f)
+
+    trailFractions.forEach { fraction ->
+        val trailPosition = positionFor(progress.value * fraction)
+        Image(
+            painter = painterResource(id = R.drawable.carrot),
+            contentDescription = null,
+            modifier =
+                modifier
+                    .size(ThrowingCarrotSize * 0.6f)
+                    .graphicsLayer {
+                        translationX = trailPosition.x
+                        translationY = trailPosition.y
+                        rotationZ = carrotRotation
+                        alpha = 0.4f * fraction
+                    },
+            contentScale = ContentScale.Fit
+        )
+    }
 
     Image(
         painter = painterResource(id = R.drawable.carrot),

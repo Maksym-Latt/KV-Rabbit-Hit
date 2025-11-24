@@ -3,6 +3,8 @@ package com.rabbit.hit.ui.main.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +20,17 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -135,8 +143,35 @@ fun MenuIconButton(
 @Composable
 fun MenuStoreButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    appear: Boolean = true,
 ) {
+    val interaction = remember { MutableInteractionSource() }
+    val isPressed by interaction.collectIsPressedAsState()
+    var appeared by remember { mutableStateOf(false) }
+
+    LaunchedEffect(appear) {
+        appeared = appear
+    }
+
+    val pressScale by
+        androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (isPressed) 0.94f else 1f,
+            animationSpec =
+                androidx.compose.animation.core.spring(
+                    dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                    stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                ),
+            label = "store_press"
+        )
+
+    val appearProgress by
+        androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (appeared) 1f else 0f,
+            animationSpec = androidx.compose.animation.core.tween(durationMillis = 320),
+            label = "store_appear"
+        )
+
     Box(
         modifier = modifier
             .size(width = 100.dp, height = 56.dp)
@@ -149,7 +184,12 @@ fun MenuStoreButton(
                     listOf(Color(0xFFE67E22), Color(0xFFD35400))
                 )
             )
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick, interactionSource = interaction, indication = null)
+            .graphicsLayer {
+                scaleX = pressScale * appearProgress
+                scaleY = pressScale * appearProgress
+                alpha = appearProgress
+            },
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -161,13 +201,14 @@ fun MenuStoreButton(
 }
 
 @Composable
-fun MenuPlayButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun MenuPlayButton(onClick: () -> Unit, modifier: Modifier = Modifier, appear: Boolean = true) {
     MenuActionButton(
         text = "Play",
         onClick = onClick,
         modifier = modifier.fillMaxWidth(0.8f),
         height = 80.dp,
-        fontSize = 36.sp
+        fontSize = 36.sp,
+        appear = appear
     )
 }
 
@@ -183,7 +224,34 @@ fun MenuActionButton(
         Brush.verticalGradient(
             listOf(Color(0xFFE67E22), Color(0xFFD35400))
         ),
+    appear: Boolean = true,
 ) {
+    val interaction = remember { MutableInteractionSource() }
+    val isPressed by interaction.collectIsPressedAsState()
+    var appeared by remember { mutableStateOf(false) }
+
+    LaunchedEffect(appear) {
+        appeared = appear
+    }
+
+    val pressScale by
+        androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (isPressed) 0.95f else 1f,
+            animationSpec =
+                androidx.compose.animation.core.spring(
+                    dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                    stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                ),
+            label = "action_press"
+        )
+
+    val appearProgress by
+        androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (appeared) 1f else 0f,
+            animationSpec = androidx.compose.animation.core.tween(durationMillis = 360),
+            label = "action_appear"
+        )
+
     Box(
         modifier =
             modifier
@@ -193,7 +261,12 @@ fun MenuActionButton(
                 .padding(bottom = 8.dp)
                 .clip(RoundedCornerShape(cornerRadius))
                 .background(gradient)
-                .clickable(onClick = onClick),
+                .clickable(onClick = onClick, interactionSource = interaction, indication = null)
+                .graphicsLayer {
+                    scaleX = pressScale * appearProgress
+                    scaleY = pressScale * appearProgress
+                    alpha = appearProgress
+                },
         contentAlignment = Alignment.Center
     ) {
         Text(

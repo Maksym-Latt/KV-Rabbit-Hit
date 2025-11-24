@@ -1,5 +1,10 @@
 package com.rabbit.hit.ui.main.menuscreen
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,8 +19,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -33,12 +44,49 @@ fun MenuScreen(
         onOpenSettings: () -> Unit,
         onOpenShop: () -> Unit,
 ) {
+    var showButtons by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        showButtons = true
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "menu_background")
+    val parallaxShift by
+        infiniteTransition.animateFloat(
+            initialValue = -10f,
+            targetValue = 10f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(5000, easing = androidx.compose.animation.core.LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+            label = "background_shift"
+        )
+
+    val rabbitFloat by
+        infiniteTransition.animateFloat(
+            initialValue = -6f,
+            targetValue = 6f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(2800, easing = androidx.compose.animation.core.LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+            label = "rabbit_float"
+        )
+
     Box(modifier = Modifier.fillMaxSize()) {
         // 1. Background
         Image(
                 painter = painterResource(id = R.drawable.bg_game),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            translationX = parallaxShift
+                            translationY = parallaxShift / 2
+                        },
                 contentScale = ContentScale.Crop
         )
 
@@ -47,7 +95,14 @@ fun MenuScreen(
             Image(
                     painter = painterResource(id = state.selectedSkin.previewRes),
                     contentDescription = null,
-                    modifier = Modifier.fillMaxWidth(0.8f),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.8f)
+                            .graphicsLayer {
+                                translationY = rabbitFloat
+                                scaleX = 1f + (rabbitFloat / 120f)
+                                scaleY = 1f + (rabbitFloat / 120f)
+                            },
                     contentScale = ContentScale.Crop
             )
         }
@@ -83,10 +138,11 @@ fun MenuScreen(
             ) {
                 // Skins Button (Store Icon)
                 MenuStoreButton(
-                    onClick = onOpenShop
+                    onClick = onOpenShop,
+                    appear = showButtons,
                 )
 
-                MenuPlayButton(onClick = onStartGame)
+                MenuPlayButton(onClick = onStartGame, appear = showButtons)
             }
         }
     }
