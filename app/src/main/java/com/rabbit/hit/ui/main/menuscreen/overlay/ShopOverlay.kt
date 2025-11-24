@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,6 +45,8 @@ fun ShopOverlay(
     owned: Set<RabbitSkin>,
     selected: RabbitSkin,
     coins: Int,
+    showInsufficientCoinsDialog: Boolean,
+    onDismissInsufficientCoinsDialog: () -> Unit,
     onClose: () -> Unit,
     onSelect: (RabbitSkin) -> Unit,
     onBuy: (RabbitSkin) -> Unit,
@@ -88,6 +92,36 @@ fun ShopOverlay(
                     )
                 }
             }
+        }
+
+        if (showInsufficientCoinsDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissInsufficientCoinsDialog,
+                confirmButton = {
+                    TextButton(onClick = onDismissInsufficientCoinsDialog) {
+                        Text(text = "Ок", fontFamily = SeymourFont, color = Color.White)
+                    }
+                },
+                title = {
+                    Text(
+                        text = "Недостаточно монет",
+                        fontFamily = SeymourFont,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Соберите больше монет, чтобы купить этот скин.",
+                        fontFamily = SeymourFont,
+                        color = Color.White,
+                        fontSize = 16.sp
+                    )
+                },
+                containerColor = Color(0xFF302018),
+                tonalElevation = 8.dp
+            )
         }
     }
 }

@@ -25,7 +25,8 @@ class MainViewModel @Inject constructor(
         val bestScore: Int = 0,
         val coins: Int = 0,
         val selectedSkin: RabbitSkin = RabbitSkin.Classic,
-        val ownedSkins: Set<RabbitSkin> = setOf(RabbitSkin.Classic)
+        val ownedSkins: Set<RabbitSkin> = setOf(RabbitSkin.Classic),
+        val showInsufficientCoinsDialog: Boolean = false,
     )
 
     private val _ui = MutableStateFlow(
@@ -69,6 +70,19 @@ class MainViewModel @Inject constructor(
     }
 
     fun buySkin(skin: RabbitSkin) {
-        progressRepository.buySkin(skin)
+        val currentCoins = _ui.value.coins
+        if (currentCoins < skin.price) {
+            _ui.update { it.copy(showInsufficientCoinsDialog = true) }
+            return
+        }
+
+        val purchased = progressRepository.buySkin(skin)
+        if (purchased) {
+            _ui.update { it.copy(showInsufficientCoinsDialog = false) }
+        }
+    }
+
+    fun dismissInsufficientCoinsDialog() {
+        _ui.update { it.copy(showInsufficientCoinsDialog = false) }
     }
 }

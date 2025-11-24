@@ -86,7 +86,12 @@ fun AppRoot(
                                 owned = ui.ownedSkins,
                                 selected = ui.selectedSkin,
                                 coins = ui.coins,
-                                onClose = { showShop = false },
+                                showInsufficientCoinsDialog = ui.showInsufficientCoinsDialog,
+                                onDismissInsufficientCoinsDialog = vm::dismissInsufficientCoinsDialog,
+                                onClose = {
+                                    showShop = false
+                                    vm.dismissInsufficientCoinsDialog()
+                                },
                                 onSelect = vm::selectSkin,
                                 onBuy = vm::buySkin
                             )

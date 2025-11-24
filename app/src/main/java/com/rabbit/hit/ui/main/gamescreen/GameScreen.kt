@@ -664,33 +664,44 @@ private fun ThrowingCarrot(
 
 
     val carrotRotation = TARGET_ANGLE + 270f
+    val bounceEndPoint =
+        remember(density) {
+            Offset(
+                x = with(density) { (-140).dp.toPx() },
+                y = with(density) { 720.dp.toPx() }
+            )
+        }
 
     LaunchedEffect(triggerKey, isBouncing) {
         progress.snapTo(0f)
+        val duration = if (isBouncing) CARROT_BOUNCE_DURATION_MS else CARROT_FLIGHT_DURATION_MS
         progress.animateTo(
             targetValue = 1f,
             animationSpec =
                 tween(
-                    durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(),
-                    easing = LinearEasing
+                    durationMillis = duration.toInt(),
+                    easing = if (isBouncing) androidx.compose.animation.core.FastOutLinearInEasing else LinearEasing
                 )
         )
         onFlightFinished()
     }
 
     val startPoint = if (isBouncing) basketRimPosition else rabbitPosition
-    val targetPoint =
-        if (isBouncing) Offset(0f, with(density) { 600.dp.toPx() }) else basketRimPosition
+    val targetPoint = if (isBouncing) bounceEndPoint else basketRimPosition
 
     fun positionFor(progressValue: Float): Offset {
         val clamped = progressValue.coerceIn(0f, 1f)
-        return Offset(
-            x = androidx.compose.ui.util.lerp(startPoint.x, targetPoint.x, clamped),
-            y = androidx.compose.ui.util.lerp(startPoint.y, targetPoint.y, clamped)
-        )
+        val baseX = androidx.compose.ui.util.lerp(startPoint.x, targetPoint.x, clamped)
+        val baseY = androidx.compose.ui.util.lerp(startPoint.y, targetPoint.y, clamped)
+        if (!isBouncing) return Offset(baseX, baseY)
+
+        val arcLift = with(density) { 90.dp.toPx() } * (1f - clamped) * (1f - clamped)
+        val sidewaysDrift = with(density) { 24.dp.toPx() } * (1f - clamped)
+        return Offset(baseX - sidewaysDrift, baseY - arcLift)
     }
 
     val currentPosition = positionFor(progress.value)
+    val rotationOffset = if (isBouncing) -220f * progress.value else 0f
     val trailFractions = listOf(0.25f, 0.5f, 0.75f)
 
     trailFractions.forEach { fraction ->
@@ -700,13 +711,13 @@ private fun ThrowingCarrot(
             contentDescription = null,
             modifier =
                 modifier
-                    .size(ThrowingCarrotSize * 0.6f)
-                    .graphicsLayer {
-                        translationX = trailPosition.x
-                        translationY = trailPosition.y
-                        rotationZ = carrotRotation
-                        alpha = 0.4f * fraction
-                    },
+                        .size(ThrowingCarrotSize * 0.6f)
+                        .graphicsLayer {
+                            translationX = trailPosition.x
+                            translationY = trailPosition.y
+                            rotationZ = carrotRotation + rotationOffset * 0.5f
+                            alpha = 0.4f * fraction
+                        },
             contentScale = ContentScale.Fit
         )
     }
@@ -720,7 +731,7 @@ private fun ThrowingCarrot(
                 .graphicsLayer {
                     translationX = currentPosition.x
                     translationY = currentPosition.y
-                    rotationZ = carrotRotation
+                    rotationZ = carrotRotation + rotationOffset
                 },
         contentScale = ContentScale.Fit
     )
