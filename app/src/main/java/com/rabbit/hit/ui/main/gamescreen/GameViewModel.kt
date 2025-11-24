@@ -7,6 +7,7 @@ import com.rabbit.hit.data.progress.RabbitSkin
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.random.Random
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -84,22 +85,12 @@ constructor(
     }
 
     fun startRun() {
-        val orbitingItems = mutableListOf<OrbitingItem>()
-
-        // Add 2-3 coins at random angles
-        val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
-        coinAngles.forEach { angle -> orbitingItems.add(OrbitingItem(angle, ItemType.COIN)) }
-
-        // Add boost items
-        orbitingItems.add(OrbitingItem(60f, ItemType.BOOST_X2))
-        orbitingItems.add(OrbitingItem(240f, ItemType.BOOST_X5))
-
         _state.update {
             GameUiState(
                     running = true,
                     showIntro = false,
                     skin = it.skin,
-                    orbitingItems = orbitingItems,
+                    orbitingItems = generateOrbitingItems(),
                     targetRotationSpeed = 55f,
                     targetScore = TARGET_SCORE,
             )
@@ -338,22 +329,12 @@ constructor(
     }
 
     fun retry() {
-        val orbitingItems = mutableListOf<OrbitingItem>()
-
-        // Add 2-3 coins at random angles
-        val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
-        coinAngles.forEach { angle -> orbitingItems.add(OrbitingItem(angle, ItemType.COIN)) }
-
-        // Add boost items
-        orbitingItems.add(OrbitingItem(60f, ItemType.BOOST_X2))
-        orbitingItems.add(OrbitingItem(240f, ItemType.BOOST_X5))
-
         _state.update {
             GameUiState(
                     running = true,
                     showIntro = false,
                     skin = it.skin,
-                    orbitingItems = orbitingItems,
+                    orbitingItems = generateOrbitingItems(),
                     targetRotationSpeed = 55f,
                     targetScore = TARGET_SCORE,
             )
@@ -392,4 +373,25 @@ private fun normalizeAngle(angle: Float): Float = (angle % 360f + 360f) % 360f
 private fun calculateTargetScore(): Int {
     val idealCarrots = (360f / (COLLISION_THRESHOLD)).toInt()
     return (idealCarrots * 0.8f).toInt().coerceAtLeast(1)
+}
+
+private fun generateOrbitingItems(): List<GameViewModel.OrbitingItem> {
+    val possibleAngles = listOf(0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f)
+    val coinCount = (3..5).random()
+    val coinAngles = possibleAngles.shuffled().take(coinCount)
+
+    val orbitingItems = coinAngles.map { angle ->
+        GameViewModel.OrbitingItem(angle, GameViewModel.ItemType.COIN)
+    }.toMutableList()
+
+    val remainingAngles = possibleAngles.filter { it !in coinAngles }
+    if (remainingAngles.isNotEmpty() && Random.nextBoolean()) {
+        val boostAngle = remainingAngles.random()
+        val boostType =
+                if (Random.nextBoolean()) GameViewModel.ItemType.BOOST_X2
+                else GameViewModel.ItemType.BOOST_X5
+        orbitingItems.add(GameViewModel.OrbitingItem(boostAngle, boostType))
+    }
+
+    return orbitingItems
 }
