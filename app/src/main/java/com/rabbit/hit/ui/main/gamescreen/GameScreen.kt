@@ -180,6 +180,7 @@ fun GameScreen(
         if (state.isGameOver) {
             WinOverlay(
                 result = viewModel.currentResult(),
+                skin = skin,
                 isWin = state.isWin,
                 onRetry = viewModel::retry,
                 onHome = {

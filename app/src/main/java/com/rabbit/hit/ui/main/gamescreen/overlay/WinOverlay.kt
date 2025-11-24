@@ -36,6 +36,7 @@ import com.rabbit.hit.ui.main.component.SeymourFont
 @Composable
 fun WinOverlay(
     result: GameResult,
+    skin: com.rabbit.hit.data.progress.RabbitSkin,
     isWin: Boolean = false,
     onRetry: () -> Unit,
     onHome: () -> Unit,
@@ -114,9 +115,7 @@ fun WinOverlay(
 
             // ==== КРОЛИК ====
             Image(
-                painter = painterResource(
-                    id = if (isWin) R.drawable.rabbit_win else R.drawable.rabbit_lose
-                ),
+                painter = painterResource(id = skin.previewRes),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
