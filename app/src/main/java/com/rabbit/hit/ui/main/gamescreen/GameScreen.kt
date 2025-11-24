@@ -390,13 +390,13 @@ private fun Playfield(
 private fun CarrotPile() {
     Box(modifier = Modifier
             .padding(start = 12.dp)
-            .size(width = 90.dp, height = 80.dp)) {
+            .size(width = 120.dp, height = 100.dp)) {
         Image(
             painter = painterResource(id = R.drawable.carrot),
             contentDescription = null,
             modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .size(46.dp)
+                    .size(86.dp)
                     .rotate(-8f),
             contentScale = ContentScale.Fit
         )
@@ -407,7 +407,7 @@ private fun CarrotPile() {
                 Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 8.dp)
-                        .size(50.dp)
+                        .size(80.dp)
                         .rotate(12f),
             contentScale = ContentScale.Fit
         )
@@ -416,7 +416,7 @@ private fun CarrotPile() {
             contentDescription = null,
             modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .size(42.dp)
+                    .size(82.dp)
                     .rotate(-24f),
             contentScale = ContentScale.Fit
         )

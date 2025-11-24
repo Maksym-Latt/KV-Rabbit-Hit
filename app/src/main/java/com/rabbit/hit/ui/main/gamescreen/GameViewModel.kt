@@ -224,7 +224,12 @@ constructor(
 
     fun resolveFlightIfReady() {
         _state.update { current ->
-            if (current.flight == null || current.isPaused || !current.running || current.isGameOver
+            if (
+                current.flight == null ||
+                current.flight.bouncing ||
+                current.isPaused ||
+                !current.running ||
+                current.isGameOver
             )
                     return@update current
             resolveImpact(current)
@@ -395,5 +400,5 @@ private fun normalizeAngle(angle: Float): Float = (angle % 360f + 360f) % 360f
 
 private fun calculateTargetScore(): Int {
     val idealCarrots = (360f / (COLLISION_THRESHOLD)).toInt()
-    return (idealCarrots * 0.8f).toInt().coerceAtLeast(1)
+    return (idealCarrots * 0.75f).toInt().coerceAtLeast(1)
 }
