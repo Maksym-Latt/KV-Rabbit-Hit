@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -406,7 +407,7 @@ private fun RotatingBasket(
                     Box(
                         modifier =
                             Modifier
-                                    .size(62.dp)
+                                    .size(52.dp)
                                     .graphicsLayer {
                                             translationX = offsetX
                                             translationY = offsetY
@@ -432,13 +433,13 @@ private fun RotatingBasket(
                                                                         Color.Transparent
                                                                 )
                                                 )
-                                        )
+                                )
                         )
                         Text(
                             text = boostText,
                             color = boostColor,
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 18.sp
+                            fontSize = 16.sp
                         )
                     }
                 }
@@ -452,21 +453,22 @@ private fun RotatingBasket(
             val progress =
                 (boost.remainingMs.toFloat() / boost.totalMs.toFloat()).coerceIn(0f, 1f)
 
-            val barHeight = 120.dp
+            val barHeight = 150.dp
 
             Box(modifier = Modifier.matchParentSize()) {
                 Box(
                     modifier =
                         Modifier
                                 .align(Alignment.CenterEnd)
-                                .offset(x = BasketSize / 2 + 18.dp)
+                                .offset(x = BasketSize / 2 + 8.dp)
                                 .height(barHeight)
-                                .width(26.dp)
+                                .width(24.dp)
+                                .shadow(elevation = 6.dp, shape = RoundedCornerShape(14.dp))
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(Color.White.copy(alpha = 0.25f))
+                                .background(Color.White.copy(alpha = 0.4f))
                                 .border(
                                         width = 2.dp,
-                                        color = boostColor.copy(alpha = 0.7f),
+                                        color = boostColor.copy(alpha = 0.8f),
                                         shape = RoundedCornerShape(14.dp)
                                 ),
                 ) {
