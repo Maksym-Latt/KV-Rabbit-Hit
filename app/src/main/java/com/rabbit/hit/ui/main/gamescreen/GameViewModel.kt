@@ -20,6 +20,7 @@ internal const val COLLISION_THRESHOLD = 8f
 internal const val CARROT_FLIGHT_DURATION_MS = 80L
 private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
+private const val MIN_ROTATION_SPEED = 25f
 private val TARGET_SCORE = calculateTargetScore()
 private const val BOOST_DURATION_MS = 5_000L
 
@@ -136,14 +137,16 @@ constructor(
             val newTargetSpeed =
                     if (shouldChangeSpeed) {
                         when ((0..100).random()) {
-                            in 0..10 -> 0f // Pause (10% - rare, max 1 sec with timing)
+                            in 0..10 -> MIN_ROTATION_SPEED // Pause replaced with slow spin (10%)
                             in 11..25 -> -current.rotationSpeed * 0.7f // Reverse (15%)
                             in 26..40 -> current.rotationSpeed * 1.6f // Speed up (15%)
                             else -> 55f // Normal rotation (60%)
-                        }.coerceIn(-ROTATION_SPEED_LIMIT, ROTATION_SPEED_LIMIT)
+                        }
                     } else {
                         current.targetRotationSpeed
                     }
+                            .let(::enforceMinimumRotationSpeed)
+                            .coerceIn(-ROTATION_SPEED_LIMIT, ROTATION_SPEED_LIMIT)
 
             // Smooth speed interpolation
             val smoothedSpeed =
@@ -397,6 +400,12 @@ private fun angleDistance(a: Float, b: Float): Float {
 }
 
 private fun normalizeAngle(angle: Float): Float = (angle % 360f + 360f) % 360f
+
+private fun enforceMinimumRotationSpeed(speed: Float): Float {
+    if (speed == 0f) return 0f
+    return if (speed > 0) speed.coerceAtLeast(MIN_ROTATION_SPEED)
+    else speed.coerceAtMost(-MIN_ROTATION_SPEED)
+}
 
 private fun calculateTargetScore(): Int {
     val idealCarrots = (360f / (COLLISION_THRESHOLD)).toInt()
