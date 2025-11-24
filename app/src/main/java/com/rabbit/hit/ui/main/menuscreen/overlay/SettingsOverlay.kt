@@ -16,19 +16,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.MusicOff
-import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -140,7 +130,7 @@ fun SettingsOverlay(
                 horizontalArrangement = Arrangement.Start
             ) {
                 MenuIconButton(
-                    iconVector = Icons.Default.ArrowBack,
+                    iconRes = R.drawable.home,
                     onClick = onClose
                 )
             }
@@ -161,16 +151,16 @@ fun SettingsOverlay(
                         title = "Sound",
                         checked = ui.soundVolume > 0,
                         onToggle = viewModel::toggleSound,
-                        iconOn = Icons.Default.VolumeUp,
-                        iconOff = Icons.Default.VolumeOff
+                        iconOnRes = R.drawable.volume,
+                        iconOffRes = R.drawable.muted
                     )
 
                     SettingToggleRow(
                         title = "Music",
                         checked = ui.musicVolume > 0,
                         onToggle = viewModel::toggleMusic,
-                        iconOn = Icons.Default.VolumeUp,
-                        iconOff = Icons.Default.VolumeOff
+                        iconOnRes = R.drawable.volume,
+                        iconOffRes = R.drawable.muted
                     )
                 }
             }
@@ -184,8 +174,8 @@ public fun SettingToggleRow(
     title: String,
     checked: Boolean,
     onToggle: (Boolean) -> Unit,
-    iconOn: androidx.compose.ui.graphics.vector.ImageVector,
-    iconOff: androidx.compose.ui.graphics.vector.ImageVector
+    iconOnRes: Int,
+    iconOffRes: Int
 ) {
     Row(
         modifier = Modifier
@@ -205,7 +195,7 @@ public fun SettingToggleRow(
         )
 
         MenuIconButton(
-            iconVector = if (checked) iconOn else iconOff,
+            iconRes = if (checked) iconOnRes else iconOffRes,
             onClick = { onToggle(!checked) },
             modifier = Modifier.graphicsLayer(alpha = if (checked) 1f else 0.85f)
         )
