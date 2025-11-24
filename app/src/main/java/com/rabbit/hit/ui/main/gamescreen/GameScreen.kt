@@ -1,5 +1,8 @@
 package com.rabbit.hit.ui.main.gamescreen
 
+import android.R.attr.fontFamily
+import android.R.attr.fontWeight
+import android.R.attr.text
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -54,6 +57,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rabbit.hit.R
 import com.rabbit.hit.audio.rememberAudioController
+import com.rabbit.hit.ui.main.component.GradientOutlinedText
 import com.rabbit.hit.ui.main.component.MenuCoinDisplay
 import com.rabbit.hit.ui.main.component.MenuIconButton
 import com.rabbit.hit.ui.main.component.SeymourFont
@@ -200,7 +204,7 @@ private fun GameHud(
             modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
-                    .padding(horizontal = 16.dp, vertical = 18.dp),
+                    .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -230,32 +234,16 @@ private fun GameScoreBadge(
         modifier =
             modifier
                     .padding(horizontal = 12.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(Color(0xFFB04500))
-                    .padding(bottom = 8.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFFFFC85C), Color(0xFFFF9340))
-                        )
-                    )
-                    .padding(horizontal = 22.dp, vertical = 10.dp),
+                    .clip(RoundedCornerShape(22.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "$score",
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 32.sp,
-                fontFamily = SeymourFont
-            )
-            Text(
-                text = "Goal $targetScore  |  x$multiplier",
-                color = Color(0xFFFFF2D4),
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                fontFamily = SeymourFont
+            GradientOutlinedText(
+                text = "${score}",
+                fontSize = 36.sp,
+                strokeWidth = 6f,
+                strokeColor = Color.White,
+                gradientColors = listOf(Color(0xffff872a), Color(0xffff872a))
             )
         }
     }

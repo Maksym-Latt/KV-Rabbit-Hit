@@ -1,5 +1,10 @@
 package com.rabbit.hit.ui.main.gamescreen.overlay
 
+import android.R.attr.strokeColor
+import android.R.attr.strokeWidth
+import android.R.attr.text
+import android.R.attr.textColor
+import android.R.attr.type
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,8 +22,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,58 +39,53 @@ import com.rabbit.hit.R
 import com.rabbit.hit.ui.main.component.GradientOutlinedText
 import com.rabbit.hit.ui.main.component.MenuActionButton
 import com.rabbit.hit.ui.main.component.SeymourFont
+import com.rabbit.hit.ui.main.menuscreen.overlay.SettingsCard
+import com.rabbit.hit.ui.main.menuscreen.overlay.ShopButtonType
 
 @Composable
 fun IntroOverlay(onStart: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xCC000000)),
+            .background(Color(0xAA000000)),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(0.86f)
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color(0xFFFFE0A3), Color(0xFFFFB85C))
-                    )
-                )
-                .padding(horizontal = 22.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            GradientOutlinedText(
-                text = "Ready to throw?",
-                fontSize = 30.sp,
-                strokeWidth = 8f,
-                strokeColor = Color(0xFFFFF2D4),
-                gradientColors = listOf(Color(0xFFE86A17), Color(0xFFE86A17))
-            )
 
+        SettingsCard(
+            title = "Ready?",
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            // Иконка
             Image(
-                painter = painterResource(id = R.drawable.rabbit_1),
+                painter = painterResource(id = R.drawable.rabbit_win),
                 contentDescription = null,
-                modifier = Modifier.size(160.dp),
+                modifier = Modifier.size(150.dp),
                 contentScale = ContentScale.Fit
             )
-            Text(
-                text = "Tap to throw carrots into empty slots. Avoid collisions and chase the multiplier!",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontFamily = SeymourFont,
+
+
+            GradientOutlinedText(
+                text = "Tap to throw carrots",
                 fontSize = 18.sp,
-                lineHeight = 22.sp,
-                textAlign = TextAlign.Center
+                strokeWidth = 6f,
+                strokeColor =  Color(0xff873e02),
+                gradientColors = listOf(Color(0xFFFFFFFF), Color(0xFFFFFFFF))
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            GradientOutlinedText(
+                text = "and avoid collisions!",
+                fontSize = 18.sp,
+                strokeWidth = 6f,
+                strokeColor =  Color(0xff873e02),
+                gradientColors = listOf(Color(0xFFFFFFFF), Color(0xFFFFFFFF))
+            )
+
+            // Кнопка
             MenuActionButton(
                 text = "Start",
                 onClick = onStart,
                 modifier = Modifier.fillMaxWidth(),
-                fontSize = 28.sp,
-                height = 70.dp
+                fontSize = 26.sp,
+                height = 64.dp
             )
         }
     }

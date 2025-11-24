@@ -35,6 +35,8 @@ import com.rabbit.hit.ui.main.component.GradientOutlinedText
 import com.rabbit.hit.ui.main.component.MenuActionButton
 import com.rabbit.hit.ui.main.component.MenuIconButton
 import com.rabbit.hit.ui.main.component.SeymourFont
+import com.rabbit.hit.ui.main.menuscreen.overlay.SettingToggleRow
+import com.rabbit.hit.ui.main.menuscreen.overlay.SettingsCard
 import com.rabbit.hit.ui.main.settings.SettingsViewModel
 
 @Composable
@@ -52,28 +54,12 @@ fun GameSettingsOverlay(
             .background(Color(0xAA000000)),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(0.82f)
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color(0xFFFEC56B), Color(0xFFF27524))
-                    )
-                )
-                .padding(horizontal = 20.dp, vertical = 22.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        SettingsCard(
+            title = "Pause",
+            modifier = Modifier.fillMaxWidth(0.9f)
         ) {
-            GradientOutlinedText(
-                text = "Pause",
-                fontSize = 32.sp,
-                strokeWidth = 8f,
-                strokeColor = Color(0xFFFFF2D4),
-                gradientColors = listOf(Color(0xFFE86A17), Color(0xFFE86A17))
-            )
 
-            PauseToggleRow(
+            SettingToggleRow(
                 title = "Sound",
                 checked = ui.soundVolume > 0,
                 onToggle = viewModel::toggleSound,
@@ -81,7 +67,7 @@ fun GameSettingsOverlay(
                 iconOff = Icons.Default.VolumeOff
             )
 
-            PauseToggleRow(
+            SettingToggleRow(
                 title = "Music",
                 checked = ui.musicVolume > 0,
                 onToggle = viewModel::toggleMusic,
@@ -115,39 +101,5 @@ fun GameSettingsOverlay(
                 gradient = Brush.verticalGradient(listOf(Color(0xFFB367E0), Color(0xFF8D3CB2)))
             )
         }
-    }
-}
-
-@Composable
-private fun PauseToggleRow(
-    title: String,
-    checked: Boolean,
-    onToggle: (Boolean) -> Unit,
-    iconOn: androidx.compose.ui.graphics.vector.ImageVector,
-    iconOff: androidx.compose.ui.graphics.vector.ImageVector,
-) {
-    Row(
-        modifier =
-            Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0x33FFFFFF))
-                    .clickable { onToggle(!checked) }
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            fontFamily = SeymourFont
-        )
-        MenuIconButton(
-            iconVector = if (checked) iconOn else iconOff,
-            onClick = { onToggle(!checked) },
-            modifier = Modifier.size(56.dp)
-        )
     }
 }

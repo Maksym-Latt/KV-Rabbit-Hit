@@ -72,14 +72,6 @@ fun ShopOverlay(
                 MenuCoinDisplay(amount = coins, onClick = {})
             }
 
-            GradientOutlinedText(
-                text = "SHOP",
-                fontSize = 36.sp,
-                strokeWidth = 10f,
-                strokeColor = Color.White,
-                gradientColors = listOf(Color(0xFFF49C47), Color(0xFFE86A17))
-            )
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -211,7 +203,7 @@ fun ShopActionButton(
 
             ShopButtonType.BUY ->
                 Brush.verticalGradient(
-                    listOf(Color(0xFF8BC34A), Color(0xFF689F38))
+                    listOf(Color(0xFF8EFF29), Color(0xFF4F9D0E))
                 )
         }
 
@@ -248,7 +240,7 @@ fun ShopActionButton(
             }
 
             val outlineColor =
-                if (type == ShopButtonType.EQUIPPED) Color.Gray else Color.Transparent
+                if (type == ShopButtonType.EQUIPPED) Color.Gray else Color.DarkGray
             val textColor = when (type) {
                 ShopButtonType.BUY -> Color(0xFFFFD54F)
                 else -> Color.White
