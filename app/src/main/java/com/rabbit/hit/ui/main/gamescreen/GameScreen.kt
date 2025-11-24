@@ -1,8 +1,5 @@
 package com.rabbit.hit.ui.main.gamescreen
 
-import android.R.attr.fontFamily
-import android.R.attr.fontWeight
-import android.R.attr.text
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -13,16 +10,21 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -42,6 +44,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -150,6 +153,7 @@ fun GameScreen(
             targetScore = state.targetScore,
             coins = state.coins,
             multiplier = state.multiplier,
+            activeBoost = state.activeBoost,
             onPause = viewModel::pause,
             modifier = Modifier.align(Alignment.TopCenter)
         )
@@ -196,29 +200,44 @@ private fun GameHud(
     targetScore: Int,
     coins: Int,
     multiplier: Int,
+    activeBoost: GameViewModel.ActiveBoost?,
     onPause: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Column(
         modifier =
             modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.displayCutout)
                     .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        MenuCoinDisplay(amount = coins, onClick = {}, modifier = Modifier.weight(1f, fill = false))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            MenuCoinDisplay(
+                amount = coins,
+                onClick = {},
+                modifier = Modifier.weight(1f, fill = false)
+            )
 
-        GameScoreBadge(
-            score = score,
-            targetScore = targetScore,
-            multiplier = multiplier,
-            modifier = Modifier.weight(1f)
-        )
+            GameScoreBadge(
+                score = score,
+                targetScore = targetScore,
+                multiplier = multiplier,
+                modifier = Modifier.weight(1f)
+            )
 
-        Box(modifier = Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
-            MenuIconButton(iconVector = Icons.Default.Pause, onClick = onPause)
+            Box(modifier = Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
+                MenuIconButton(iconVector = Icons.Default.Pause, onClick = onPause)
+            }
+        }
+
+        activeBoost?.let { boost ->
+            Spacer(modifier = Modifier.height(8.dp))
+            ActiveBoostBar(boost = boost)
         }
     }
 }
@@ -245,6 +264,71 @@ private fun GameScoreBadge(
                 strokeColor = Color.White,
                 gradientColors = listOf(Color(0xffff872a), Color(0xffff872a))
             )
+        }
+    }
+}
+
+@Composable
+private fun ActiveBoostBar(boost: GameViewModel.ActiveBoost) {
+    val progress =
+        (boost.remainingMs.toFloat() / boost.totalDurationMs.toFloat()).coerceIn(0f, 1f)
+    val boostColor = if (boost.multiplier == 2) Color(0xFF4CAF50) else Color(0xFFFF9800)
+
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier =
+                Modifier
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(boostColor.copy(alpha = 0.18f))
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier =
+                        Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.18f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "x${boost.multiplier}",
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Box(
+                    modifier =
+                        Modifier
+                                .height(8.dp)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White.copy(alpha = 0.35f))
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                    .fillMaxHeight()
+                                    .fillMaxWidth(progress)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                            Brush.horizontalGradient(
+                                                    colors = listOf(
+                                                        boostColor,
+                                                        boostColor.copy(alpha = 0.6f)
+                                                    )
+                                            )
+                                    )
+                    )
+                }
+            }
         }
     }
 }
@@ -277,7 +361,6 @@ private fun Playfield(
                 angle = state.basketAngle,
                 carrots = state.carrots,
                 orbitingItems = state.orbitingItems,
-                activeBoost = state.activeBoost,
                 debugHitboxes = debugHitboxes,
             )
         }
@@ -351,7 +434,6 @@ private fun RotatingBasket(
     angle: Float,
     carrots: List<GameViewModel.CarrotPin>,
     orbitingItems: List<GameViewModel.OrbitingItem>,
-    activeBoost: GameViewModel.ActiveBoost?,
     debugHitboxes: Boolean
 ) {
     val density = LocalDensity.current
@@ -402,47 +484,29 @@ private fun RotatingBasket(
                     Box(
                         modifier =
                             Modifier
-                                    .size(50.dp)
+                                    .size(42.dp)
                                     .graphicsLayer {
                                             translationX = offsetX
                                             translationY = offsetY
                                     }
-                                    .clip(RoundedCornerShape(25.dp))
-                                    .background(boostColor),
+                                    .clip(CircleShape)
+                                    .background(boostColor.copy(alpha = 0.85f)),
                         contentAlignment = Alignment.Center
                     ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.coin_placeholder),
+                            contentDescription = null,
+                            modifier = Modifier.matchParentSize(),
+                            colorFilter = ColorFilter.tint(boostColor.copy(alpha = 0.8f))
+                        )
                         Text(
                             text = boostText,
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 18.sp
+                            fontSize = 16.sp
                         )
                     }
                 }
-            }
-        }
-
-        // Render boost timer
-        activeBoost?.let { boost ->
-            val seconds = (boost.remainingMs / 1000).toInt()
-            val boostColor =
-                if (boost.multiplier == 2) Color(0xFF4CAF50) else Color(0xFFFF9800)
-
-            Box(
-                modifier =
-                    Modifier
-                            .offset(y = (-150).dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(boostColor)
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text =
-                        "0:${seconds.toString().padStart(2, '0')} • x${boost.multiplier}",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
             }
         }
 

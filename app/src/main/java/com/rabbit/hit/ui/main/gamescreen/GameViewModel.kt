@@ -21,6 +21,7 @@ internal const val CARROT_FLIGHT_DURATION_MS = 110L
 private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
 private val TARGET_SCORE = calculateTargetScore()
+private const val BOOST_DURATION_MS = 12_000L
 
 @HiltViewModel
 class GameViewModel
@@ -43,7 +44,11 @@ constructor(
             val id: Int = (Math.random() * 100000).toInt()
     )
 
-    data class ActiveBoost(val multiplier: Int, val remainingMs: Long)
+    data class ActiveBoost(
+            val multiplier: Int,
+            val remainingMs: Long,
+            val totalDurationMs: Long,
+    )
 
     data class CarrotFlight(val id: Int, val elapsedMs: Long = 0, val bouncing: Boolean = false)
 
@@ -90,9 +95,12 @@ constructor(
         val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
         coinAngles.forEach { angle -> orbitingItems.add(OrbitingItem(angle, ItemType.COIN)) }
 
-        // Add boost items
-        orbitingItems.add(OrbitingItem(60f, ItemType.BOOST_X2))
-        orbitingItems.add(OrbitingItem(240f, ItemType.BOOST_X5))
+        // Add a single boost item with a 50% chance
+        if ((0..1).random() == 1) {
+            val boostType = if ((0..1).random() == 0) ItemType.BOOST_X2 else ItemType.BOOST_X5
+            val boostAngle = listOf(60f, 240f).random()
+            orbitingItems.add(OrbitingItem(boostAngle, boostType))
+        }
 
         _state.update {
             GameUiState(
@@ -251,7 +259,12 @@ constructor(
                     val boostMultiplier = if (hitItem.type == ItemType.BOOST_X2) 2 else 5
                     emitEvent(GameEvent.BoostCollected)
                     current.copy(
-                            activeBoost = ActiveBoost(boostMultiplier, 12000), // 12 seconds
+                            activeBoost =
+                                    ActiveBoost(
+                                            boostMultiplier,
+                                            BOOST_DURATION_MS,
+                                            BOOST_DURATION_MS,
+                                    ),
                             orbitingItems = current.orbitingItems.filter { it.id != hitItem.id },
                             carrots = current.carrots + CarrotPin(pinnedAngle),
                             flight = null,
@@ -332,9 +345,12 @@ constructor(
         val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
         coinAngles.forEach { angle -> orbitingItems.add(OrbitingItem(angle, ItemType.COIN)) }
 
-        // Add boost items
-        orbitingItems.add(OrbitingItem(60f, ItemType.BOOST_X2))
-        orbitingItems.add(OrbitingItem(240f, ItemType.BOOST_X5))
+        // Add a single boost item with a 50% chance
+        if ((0..1).random() == 1) {
+            val boostType = if ((0..1).random() == 0) ItemType.BOOST_X2 else ItemType.BOOST_X5
+            val boostAngle = listOf(60f, 240f).random()
+            orbitingItems.add(OrbitingItem(boostAngle, boostType))
+        }
 
         _state.update {
             GameUiState(
