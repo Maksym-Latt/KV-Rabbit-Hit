@@ -376,10 +376,7 @@ private fun RotatingBasket(
             when (item.type) {
                 GameViewModel.ItemType.COIN -> {
                     Image(
-                        painter =
-                            painterResource(
-                                id = R.drawable.coin_placeholder
-                            ),
+                        painter = painterResource(id = R.drawable.ic_coin),
                         contentDescription = null,
                         modifier =
                             Modifier
