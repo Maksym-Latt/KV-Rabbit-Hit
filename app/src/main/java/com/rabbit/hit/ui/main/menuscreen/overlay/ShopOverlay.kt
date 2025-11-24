@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -90,6 +93,61 @@ fun ShopOverlay(
             }
         }
     }
+}
+
+@Composable
+fun NotEnoughCoinsDialog(
+    onDismiss: () -> Unit,
+    onStartGame: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            GradientOutlinedText(
+                text = "Not enough coins",
+                fontSize = 24.sp,
+                strokeWidth = 10f,
+                strokeColor = Color(0xFFFF9800),
+                gradientColors = listOf(Color.White, Color(0xFFFFE082)),
+            )
+        },
+        text = {
+            Text(
+                text = "Play more runs to collect coins and unlock this skin!",
+                color = Color(0xFF4E342E),
+                fontFamily = SeymourFont,
+                fontWeight = FontWeight.SemiBold,
+                lineHeight = 18.sp,
+                fontSize = 16.sp,
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onStartGame,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF49C47))
+            ) {
+                Text(
+                    text = "Start run",
+                    color = Color.White,
+                    fontFamily = SeymourFont,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB0BEC5))
+            ) {
+                Text(
+                    text = "Later",
+                    color = Color.White,
+                    fontFamily = SeymourFont,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    )
 }
 
 enum class ShopButtonType {

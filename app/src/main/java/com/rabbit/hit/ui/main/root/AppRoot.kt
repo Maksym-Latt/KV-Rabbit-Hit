@@ -21,6 +21,7 @@ import com.rabbit.hit.ui.main.gamescreen.GameResult
 import com.rabbit.hit.ui.main.menuscreen.MainViewModel
 import com.rabbit.hit.ui.main.menuscreen.MenuScreen
 import com.rabbit.hit.ui.main.menuscreen.overlay.SettingsOverlay
+import com.rabbit.hit.ui.main.menuscreen.overlay.NotEnoughCoinsDialog
 import com.rabbit.hit.ui.main.menuscreen.overlay.ShopOverlay
 
 @Composable
@@ -31,6 +32,7 @@ fun AppRoot(
     var showMenuSettings by rememberSaveable { mutableStateOf(false) }
     var showMenuPrivacy by rememberSaveable { mutableStateOf(false) }
     var showShop by rememberSaveable { mutableStateOf(false) }
+    var showLowCoinsDialog by rememberSaveable { mutableStateOf(false) }
     val audio = rememberAudioController()
 
     LaunchedEffect(ui.screen) {
@@ -88,7 +90,23 @@ fun AppRoot(
                                 coins = ui.coins,
                                 onClose = { showShop = false },
                                 onSelect = vm::selectSkin,
-                                onBuy = vm::buySkin
+                                onBuy = { skin ->
+                                    val purchased = vm.buySkin(skin)
+                                    if (!purchased) showLowCoinsDialog = true
+                                }
+                            )
+                        }
+
+                        if (showLowCoinsDialog) {
+                            NotEnoughCoinsDialog(
+                                onDismiss = { showLowCoinsDialog = false },
+                                onStartGame = {
+                                    showLowCoinsDialog = false
+                                    showMenuSettings = false
+                                    showMenuPrivacy = false
+                                    showShop = false
+                                    vm.startGame()
+                                }
                             )
                         }
                     }

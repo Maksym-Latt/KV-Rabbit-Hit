@@ -2,6 +2,7 @@ package com.rabbit.hit.ui.main.gamescreen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -667,12 +668,13 @@ private fun ThrowingCarrot(
 
     LaunchedEffect(triggerKey, isBouncing) {
         progress.snapTo(0f)
+        val bounceDuration = (CARROT_FLIGHT_DURATION_MS * if (isBouncing) 1.25f else 1f).toInt()
         progress.animateTo(
             targetValue = 1f,
             animationSpec =
                 tween(
-                    durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(),
-                    easing = LinearEasing
+                    durationMillis = bounceDuration,
+                    easing = if (isBouncing) CubicBezierEasing(0.25f, 0f, 0.2f, 1f) else LinearEasing
                 )
         )
         onFlightFinished()
@@ -681,13 +683,27 @@ private fun ThrowingCarrot(
     val startPoint = if (isBouncing) basketRimPosition else rabbitPosition
     val targetPoint =
         if (isBouncing) Offset(0f, with(density) { 600.dp.toPx() }) else basketRimPosition
+    val bounceHeightPx = remember(density) { with(density) { 160.dp.toPx() } }
+    val horizontalDriftPx = remember(density) { with(density) { 40.dp.toPx() } }
 
     fun positionFor(progressValue: Float): Offset {
         val clamped = progressValue.coerceIn(0f, 1f)
-        return Offset(
-            x = androidx.compose.ui.util.lerp(startPoint.x, targetPoint.x, clamped),
+        if (!isBouncing) {
+            return Offset(
+                x = androidx.compose.ui.util.lerp(startPoint.x, targetPoint.x, clamped),
+                y = androidx.compose.ui.util.lerp(startPoint.y, targetPoint.y, clamped)
+            )
+        }
+
+        val swingTargetX = targetPoint.x + horizontalDriftPx
+        val basePosition = Offset(
+            x = androidx.compose.ui.util.lerp(startPoint.x, swingTargetX, clamped),
             y = androidx.compose.ui.util.lerp(startPoint.y, targetPoint.y, clamped)
         )
+
+        val arcLift = -kotlin.math.sin(Math.PI * clamped).toFloat() * bounceHeightPx
+
+        return basePosition + Offset(0f, arcLift)
     }
 
     val currentPosition = positionFor(progress.value)
@@ -720,7 +736,11 @@ private fun ThrowingCarrot(
                 .graphicsLayer {
                     translationX = currentPosition.x
                     translationY = currentPosition.y
-                    rotationZ = carrotRotation
+                    rotationZ =
+                        carrotRotation +
+                            if (isBouncing) {
+                                -25f * kotlin.math.sin(progress.value * Math.PI).toFloat()
+                            } else 0f
                 },
         contentScale = ContentScale.Fit
     )
