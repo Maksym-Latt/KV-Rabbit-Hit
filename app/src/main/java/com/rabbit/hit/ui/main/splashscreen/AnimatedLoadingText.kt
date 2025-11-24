@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import com.rabbit.hit.ui.main.component.GradientOutlinedText
 import kotlinx.coroutines.delay
 
@@ -38,6 +39,7 @@ fun AnimatedLoadingText(
         text = display,
         modifier = modifier,
         fontSize = 34.sp,
-        strokeWidth = 10f
+        strokeWidth = 10f,
+        gradientColors = listOf(Color(0xFFF47E47), Color(0xFFF47E47))
     )
 }
