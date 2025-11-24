@@ -377,7 +377,7 @@ private fun calculateTargetScore(): Int {
 
 private fun generateOrbitingItems(): List<GameViewModel.OrbitingItem> {
     val possibleAngles = listOf(0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f)
-    val coinCount = (3..5).random()
+    val coinCount = (2..5).random()
     val coinAngles = possibleAngles.shuffled().take(coinCount)
 
     val orbitingItems = coinAngles.map { angle ->

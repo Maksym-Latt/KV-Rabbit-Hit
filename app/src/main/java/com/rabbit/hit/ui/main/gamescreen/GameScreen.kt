@@ -155,6 +155,7 @@ fun GameScreen(
             targetScore = state.targetScore,
             coins = state.coins,
             multiplier = state.multiplier,
+            activeBoost = state.activeBoost,
             onPause = viewModel::pause,
             modifier = Modifier.align(Alignment.TopCenter)
         )
@@ -201,29 +202,99 @@ private fun GameHud(
     targetScore: Int,
     coins: Int,
     multiplier: Int,
+    activeBoost: GameViewModel.ActiveBoost?,
     onPause: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier =
-            modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.displayCutout)
-                    .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        MenuCoinDisplay(amount = coins, onClick = {}, modifier = Modifier.weight(1f, fill = false))
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier =
+                Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.displayCutout)
+                        .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            MenuCoinDisplay(amount = coins, onClick = {}, modifier = Modifier.weight(1f, fill = false))
 
-        GameScoreBadge(
-            score = score,
-            targetScore = targetScore,
-            multiplier = multiplier,
-            modifier = Modifier.weight(1f)
-        )
+            GameScoreBadge(
+                score = score,
+                targetScore = targetScore,
+                multiplier = multiplier,
+                modifier = Modifier.weight(1f)
+            )
 
-        Box(modifier = Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
-            MenuIconButton(iconVector = Icons.Default.Pause, onClick = onPause)
+            Box(modifier = Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
+                MenuIconButton(iconVector = Icons.Default.Pause, onClick = onPause)
+            }
+        }
+
+        ActiveBoostTimer(activeBoost = activeBoost, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+private fun ActiveBoostTimer(activeBoost: GameViewModel.ActiveBoost?, modifier: Modifier = Modifier) {
+    if (activeBoost == null) return
+
+    val boostColor = if (activeBoost.multiplier == 2) Color(0xFF4CAF50) else Color(0xFFFF9800)
+    val remainingSeconds = (activeBoost.remainingMs / 1000f).coerceAtLeast(0f)
+    val progress =
+        (activeBoost.remainingMs.toFloat() / activeBoost.totalMs.toFloat()).coerceIn(0f, 1f)
+
+    Column(modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Box(
+            modifier =
+                Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xE61B1B1B))
+                        .border(1.dp, boostColor.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Модификатор x${activeBoost.multiplier}",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "Осталось ${String.format("%.1f", remainingSeconds)}с",
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    )
+                }
+
+                Box(
+                    modifier =
+                        Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White.copy(alpha = 0.15f))
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                    .fillMaxHeight()
+                                    .fillMaxWidth(progress)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                            Brush.horizontalGradient(
+                                                    colors =
+                                                            listOf(
+                                                                    boostColor.copy(alpha = 0.95f),
+                                                                    boostColor.copy(alpha = 0.7f)
+                                                            )
+                                            )
+                                    )
+                    )
+                }
+            }
         }
     }
 }
