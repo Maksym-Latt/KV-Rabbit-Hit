@@ -68,7 +68,5 @@ class MainViewModel @Inject constructor(
         progressRepository.selectSkin(skin)
     }
 
-    fun buySkin(skin: RabbitSkin) {
-        progressRepository.buySkin(skin)
-    }
+    fun buySkin(skin: RabbitSkin): Boolean = progressRepository.buySkin(skin)
 }

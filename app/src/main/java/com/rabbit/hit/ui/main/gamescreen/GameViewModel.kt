@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 internal const val TARGET_ANGLE = 90f
 internal const val COLLISION_THRESHOLD = 8f
 internal const val CARROT_FLIGHT_DURATION_MS = 80L
+internal const val CARROT_BOUNCE_DURATION_MS = 320L
 private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
 private const val MIN_ROTATION_SPEED = 25f
@@ -175,7 +176,7 @@ constructor(
 
             // Handle bouncing carrot
             if (flight.bouncing) {
-                if (flight.elapsedMs >= CARROT_FLIGHT_DURATION_MS) {
+                if (flight.elapsedMs >= CARROT_BOUNCE_DURATION_MS) {
                     // Bounce finished, game over
                     emitEvent(GameEvent.GameOver)
                     return@update current.copy(

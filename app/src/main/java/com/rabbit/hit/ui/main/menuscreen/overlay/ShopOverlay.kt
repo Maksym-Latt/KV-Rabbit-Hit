@@ -43,6 +43,8 @@ fun ShopOverlay(
     owned: Set<RabbitSkin>,
     selected: RabbitSkin,
     coins: Int,
+    message: String?,
+    onDismissMessage: () -> Unit,
     onClose: () -> Unit,
     onSelect: (RabbitSkin) -> Unit,
     onBuy: (RabbitSkin) -> Unit,
@@ -68,6 +70,25 @@ fun ShopOverlay(
             ) {
                 MenuIconButton(iconRes = R.drawable.home, onClick = onClose)
                 MenuCoinDisplay(amount = coins, onClick = {})
+            }
+
+            if (message != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFF6C1E1E).copy(alpha = 0.88f))
+                        .clickable { onDismissMessage() }
+                        .padding(horizontal = 18.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = message,
+                        color = Color.White,
+                        fontFamily = SeymourFont,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
 
             LazyColumn(

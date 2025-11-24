@@ -31,6 +31,7 @@ fun AppRoot(
     var showMenuSettings by rememberSaveable { mutableStateOf(false) }
     var showMenuPrivacy by rememberSaveable { mutableStateOf(false) }
     var showShop by rememberSaveable { mutableStateOf(false) }
+    var shopMessage by rememberSaveable { mutableStateOf<String?>(null) }
     val audio = rememberAudioController()
 
     LaunchedEffect(ui.screen) {
@@ -38,6 +39,7 @@ fun AppRoot(
             showMenuSettings = false
             showMenuPrivacy = false
             showShop = false
+            shopMessage = null
         }
         when (ui.screen) {
             MainViewModel.Screen.Menu -> audio.playMenuMusic()
@@ -68,10 +70,14 @@ fun AppRoot(
                                 showMenuSettings = false
                                 showMenuPrivacy = false
                                 showShop = false
+                                shopMessage = null
                                 vm.startGame()
                             },
                             onOpenSettings = { showMenuSettings = true },
-                            onOpenShop = { showShop = true },
+                            onOpenShop = {
+                                shopMessage = null
+                                showShop = true
+                            },
                         )
 
                         if (showMenuSettings) {
@@ -86,9 +92,18 @@ fun AppRoot(
                                 owned = ui.ownedSkins,
                                 selected = ui.selectedSkin,
                                 coins = ui.coins,
+                                message = shopMessage,
+                                onDismissMessage = { shopMessage = null },
                                 onClose = { showShop = false },
                                 onSelect = vm::selectSkin,
-                                onBuy = vm::buySkin
+                                onBuy = { skin ->
+                                    val purchased = vm.buySkin(skin)
+                                    if (!purchased) {
+                                        shopMessage = "Недостаточно монет, чтобы купить этот скин."
+                                    } else {
+                                        shopMessage = null
+                                    }
+                                }
                             )
                         }
                     }

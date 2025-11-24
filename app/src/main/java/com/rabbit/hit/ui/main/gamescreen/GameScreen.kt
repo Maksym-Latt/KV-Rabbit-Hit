@@ -3,6 +3,7 @@ package com.rabbit.hit.ui.main.gamescreen
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -43,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -667,12 +669,14 @@ private fun ThrowingCarrot(
 
     LaunchedEffect(triggerKey, isBouncing) {
         progress.snapTo(0f)
+        val duration =
+            if (isBouncing) CARROT_BOUNCE_DURATION_MS.toInt() else CARROT_FLIGHT_DURATION_MS.toInt()
         progress.animateTo(
             targetValue = 1f,
             animationSpec =
                 tween(
-                    durationMillis = CARROT_FLIGHT_DURATION_MS.toInt(),
-                    easing = LinearEasing
+                    durationMillis = duration,
+                    easing = if (isBouncing) LinearOutSlowInEasing else LinearEasing
                 )
         )
         onFlightFinished()
@@ -680,13 +684,18 @@ private fun ThrowingCarrot(
 
     val startPoint = if (isBouncing) basketRimPosition else rabbitPosition
     val targetPoint =
-        if (isBouncing) Offset(0f, with(density) { 600.dp.toPx() }) else basketRimPosition
+        if (isBouncing) Offset(with(density) { (-180).dp.toPx() }, with(density) { 520.dp.toPx() })
+        else basketRimPosition
 
     fun positionFor(progressValue: Float): Offset {
         val clamped = progressValue.coerceIn(0f, 1f)
+        val curveControl =
+            if (isBouncing) Offset(startPoint.x * 0.6f, targetPoint.y * 0.6f) else startPoint
+        val midPoint =
+            if (isBouncing) lerp(startPoint, curveControl, clamped) else startPoint
         return Offset(
-            x = androidx.compose.ui.util.lerp(startPoint.x, targetPoint.x, clamped),
-            y = androidx.compose.ui.util.lerp(startPoint.y, targetPoint.y, clamped)
+            x = androidx.compose.ui.util.lerp(midPoint.x, targetPoint.x, clamped),
+            y = androidx.compose.ui.util.lerp(midPoint.y, targetPoint.y, clamped)
         )
     }
 
