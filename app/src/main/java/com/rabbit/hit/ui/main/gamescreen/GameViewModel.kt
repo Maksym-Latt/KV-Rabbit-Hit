@@ -21,7 +21,7 @@ internal const val CARROT_FLIGHT_DURATION_MS = 80L
 private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
 private const val MIN_ROTATION_SPEED = 25f
-private val TARGET_SCORE = calculateTargetScore()
+private val BASE_TARGET_SCORE = calculateTargetScore()
 private const val BOOST_DURATION_MS = 5_000L
 
 @HiltViewModel
@@ -32,6 +32,7 @@ constructor(
 ) : ViewModel() {
 
     data class CarrotPin(val angle: Float)
+    data class StickPin(val angle: Float)
 
     enum class ItemType {
         COIN,
@@ -62,11 +63,12 @@ constructor(
             val score: Int = 0,
             val multiplier: Int = 1,
             val coins: Int = 0,
-            val targetScore: Int = TARGET_SCORE,
+            val targetScore: Int = BASE_TARGET_SCORE,
             val basketAngle: Float = 0f,
             val rotationSpeed: Float = 55f,
             val targetRotationSpeed: Float = 55f,
             val carrots: List<CarrotPin> = emptyList(),
+            val sticks: List<StickPin> = emptyList(),
             val orbitingItems: List<OrbitingItem> = emptyList(),
             val activeBoost: ActiveBoost? = null,
             val skin: RabbitSkin = RabbitSkin.Classic,
@@ -91,6 +93,9 @@ constructor(
 
     fun startRun() {
         val orbitingItems = mutableListOf<OrbitingItem>()
+        val sticks = generateSticks()
+
+        val targetScore = (BASE_TARGET_SCORE - sticks.size * 2).coerceAtLeast(1)
 
         // Add 2-3 coins at random angles
         val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
@@ -109,8 +114,9 @@ constructor(
                     showIntro = false,
                     skin = it.skin,
                     orbitingItems = orbitingItems,
+                    sticks = sticks,
                     targetRotationSpeed = 55f,
-                    targetScore = TARGET_SCORE,
+                    targetScore = targetScore,
             )
         }
     }
@@ -281,14 +287,20 @@ constructor(
             }
         }
 
-        // Check collision with pinned carrots
+        // Check collision with pinned carrots or sticks
         val carrotCollision =
                 current.carrots.any { pin ->
                     val worldAngle = normalizeAngle(pin.angle + current.basketAngle)
                     angleDistance(worldAngle, TARGET_ANGLE) < COLLISION_THRESHOLD
                 }
 
-        if (carrotCollision) {
+        val stickCollision =
+                current.sticks.any { stick ->
+                    val worldAngle = normalizeAngle(stick.angle + current.basketAngle)
+                    angleDistance(worldAngle, TARGET_ANGLE) < COLLISION_THRESHOLD
+                }
+
+        if (carrotCollision || stickCollision) {
             // Bounce back
             return current.copy(
                     flight = current.flight?.copy(bouncing = true, elapsedMs = 0),
@@ -348,6 +360,9 @@ constructor(
 
     fun retry() {
         val orbitingItems = mutableListOf<OrbitingItem>()
+        val sticks = generateSticks()
+
+        val targetScore = (BASE_TARGET_SCORE - sticks.size * 2).coerceAtLeast(1)
 
         // Add 2-3 coins at random angles
         val coinAngles = listOf(30f, 120f, 210f, 300f).shuffled().take((2..3).random())
@@ -366,8 +381,9 @@ constructor(
                     showIntro = false,
                     skin = it.skin,
                     orbitingItems = orbitingItems,
+                    sticks = sticks,
                     targetRotationSpeed = 55f,
-                    targetScore = TARGET_SCORE,
+                    targetScore = targetScore,
             )
         }
     }
@@ -405,6 +421,25 @@ private fun enforceMinimumRotationSpeed(speed: Float): Float {
     if (speed == 0f) return 0f
     return if (speed > 0) speed.coerceAtLeast(MIN_ROTATION_SPEED)
     else speed.coerceAtMost(-MIN_ROTATION_SPEED)
+}
+
+private fun generateSticks(): List<GameViewModel.StickPin> {
+    val stickCount = (0..3).random()
+    if (stickCount == 0) return emptyList()
+
+    val angles = mutableListOf<Float>()
+
+    repeat(stickCount) {
+        var angle: Float
+        var attempts = 0
+        do {
+            angle = (0..359).random().toFloat()
+            attempts++
+        } while (angles.any { angleDistance(it, angle) < COLLISION_THRESHOLD * 1.5 } && attempts < 10)
+        angles.add(angle)
+    }
+
+    return angles.map(GameViewModel::StickPin)
 }
 
 private fun calculateTargetScore(): Int {

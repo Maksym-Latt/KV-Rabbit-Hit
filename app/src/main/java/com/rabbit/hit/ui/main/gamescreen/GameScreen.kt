@@ -359,6 +359,7 @@ private fun Playfield(
             RotatingBasket(
                 angle = state.basketAngle,
                 carrots = state.carrots,
+                sticks = state.sticks,
                 orbitingItems = state.orbitingItems,
                 debugHitboxes = debugHitboxes,
             )
@@ -427,11 +428,13 @@ private const val DEBUG_DRAW_HITBOXES = false
 private val BasketSize = 260.dp
 private val PinnedCarrotSize = 82.dp
 private val ThrowingCarrotSize = 80.dp
+private val StickSize = 92.dp
 
 @Composable
 private fun RotatingBasket(
     angle: Float,
     carrots: List<GameViewModel.CarrotPin>,
+    sticks: List<GameViewModel.StickPin>,
     orbitingItems: List<GameViewModel.OrbitingItem>,
     debugHitboxes: Boolean
 ) {
@@ -536,6 +539,17 @@ private fun RotatingBasket(
                         style = Stroke(width = strokeWidth)
                     )
                 }
+
+                sticks.forEach { stick ->
+                    val stickWorldAngle = stick.angle + angle
+                    drawArc(
+                        color = Color(0x805f4c00),
+                        startAngle = stickWorldAngle - COLLISION_THRESHOLD,
+                        sweepAngle = sweep,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth)
+                    )
+                }
             }
         }
         carrots.forEach { pin ->
@@ -550,6 +564,26 @@ private fun RotatingBasket(
                 modifier =
                     Modifier
                             .size(PinnedCarrotSize)
+                            .graphicsLayer {
+                                    translationX = offsetX
+                                    translationY = offsetY
+                            rotationZ = totalAngle + 270f
+                    },
+            )
+        }
+
+        sticks.forEach { stick ->
+            val totalAngle = stick.angle + angle
+            val radians = Math.toRadians(totalAngle.toDouble())
+            val offsetX = (cos(radians) * radiusPx).toFloat()
+            val offsetY = (sin(radians) * radiusPx).toFloat()
+
+            Image(
+                painter = painterResource(id = R.drawable.stick),
+                contentDescription = null,
+                modifier =
+                    Modifier
+                            .size(StickSize)
                             .graphicsLayer {
                                     translationX = offsetX
                                     translationY = offsetY
