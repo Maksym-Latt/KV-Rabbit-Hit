@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -83,16 +84,16 @@ fun GameScreen(
 
     val backgroundMotion = rememberInfiniteTransition(label = "game_parallax")
     val backgroundShift by
-        backgroundMotion.animateFloat(
-            initialValue = -10f,
-            targetValue = 10f,
-            animationSpec =
-                infiniteRepeatable(
-                    animation = tween(5200, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-            label = "bg_shift"
-        )
+    backgroundMotion.animateFloat(
+        initialValue = -10f,
+        targetValue = 10f,
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(5200, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+        label = "bg_shift"
+    )
 
     LaunchedEffect(skin) {
         viewModel.setSkin(skin)
@@ -140,21 +141,21 @@ fun GameScreen(
     Box(
         modifier =
             Modifier
-                    .fillMaxSize()
-                    .pointerInput(
-                            state.running,
-                            state.isPaused,
-                            state.isGameOver
-                    ) {
-                            detectTapGestures(
-                                    onTap = { _ ->
-                                            launchOffset.value = null
-                                            if (viewModel.throwCarrot()) {
-                                                    audio.playHit()
-                                            }
-                                    }
-                            )
-                    }
+                .fillMaxSize()
+                .pointerInput(
+                    state.running,
+                    state.isPaused,
+                    state.isGameOver
+                ) {
+                    detectTapGestures(
+                        onTap = { _ ->
+                            launchOffset.value = null
+                            if (viewModel.throwCarrot()) {
+                                audio.playHit()
+                            }
+                        }
+                    )
+                }
     ) {
         Image(
             painter = painterResource(id = R.drawable.bg_game),
@@ -204,7 +205,10 @@ fun GameScreen(
             WinOverlay(
                 result = viewModel.currentResult(),
                 isWin = state.isWin,
-                onRetry = viewModel::retry,
+                onRetry = {
+                    viewModel.consumeResult()
+                    viewModel.retry()
+                },
                 onHome = {
                     val result = viewModel.currentResult()
                     viewModel.consumeResult()
@@ -228,9 +232,9 @@ private fun GameHud(
     Column(
         modifier =
             modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.displayCutout)
-                    .padding(horizontal = 16.dp),
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.displayCutout)
+                .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
@@ -251,7 +255,10 @@ private fun GameHud(
                 modifier = Modifier.weight(1f)
             )
 
-            Box(modifier = Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
+            Box(
+                modifier = Modifier.weight(1f, fill = false),
+                contentAlignment = Alignment.CenterEnd
+            ) {
                 MenuIconButton(iconRes = R.drawable.settings, onClick = onPause)
             }
         }
@@ -273,8 +280,8 @@ private fun GameScoreBadge(
     Box(
         modifier =
             modifier
-                    .padding(horizontal = 12.dp)
-                    .clip(RoundedCornerShape(22.dp)),
+                .padding(horizontal = 12.dp)
+                .clip(RoundedCornerShape(22.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -297,35 +304,34 @@ private fun ActiveBoostBar(boost: GameViewModel.ActiveBoost) {
 
     val shimmerTransition = rememberInfiniteTransition(label = "boost_shimmer")
     val shimmerOffset by
-        shimmerTransition.animateFloat(
-            initialValue = -60f,
-            targetValue = 80f,
-            animationSpec =
-                infiniteRepeatable(
-                    animation = tween(1100, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart
-                ),
-            label = "boost_offset"
-        )
+    shimmerTransition.animateFloat(
+        initialValue = -60f,
+        targetValue = 80f,
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(1100, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+        label = "boost_offset"
+    )
 
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier =
                 Modifier
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(boostColor.copy(alpha = 0.38f))
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(boostColor.copy(alpha = 0.78f))
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier =
-                        Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.18f)),
+                        Modifier,
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -341,25 +347,25 @@ private fun ActiveBoostBar(boost: GameViewModel.ActiveBoost) {
                 Box(
                     modifier =
                         Modifier
-                                .height(8.dp)
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White.copy(alpha = 0.35f))
+                            .height(8.dp)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.85f))
                 ) {
                     Box(
                         modifier =
                             Modifier
-                                    .fillMaxHeight()
-                                    .fillMaxWidth(progress)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                            Brush.horizontalGradient(
-                                                    colors = listOf(
-                                                        boostColor,
-                                                        boostColor.copy(alpha = 0.6f)
-                                                    )
-                                            )
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            boostColor,
+                                            boostColor.copy(alpha = 0.8f)
+                                        )
                                     )
+                                )
                     )
                     Box(
                         modifier =
@@ -395,9 +401,10 @@ private fun Playfield(
     Box(modifier = modifier) {
         Box(
             modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth()
-                    .height(420.dp),
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .height(420.dp)
+                .offset(y = (-100).dp),
             contentAlignment = Alignment.Center
         ) {
             ThrowingCarrot(
@@ -413,15 +420,16 @@ private fun Playfield(
                 sticks = state.sticks,
                 orbitingItems = state.orbitingItems,
                 debugHitboxes = debugHitboxes,
-            )
+
+                )
         }
 
         Row(
             modifier =
                 Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 12.dp)
-                        .fillMaxWidth(),
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 12.dp)
+                    .fillMaxWidth(),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -429,8 +437,9 @@ private fun Playfield(
                 painter = painterResource(id = skin.gameRes),
                 contentDescription = null,
                 modifier = Modifier
-                        .padding(bottom = 6.dp)
-                        .size(190.dp),
+                    .padding(bottom = 6.dp)
+                    .size(250.dp)
+                    .offset(x = (15).dp),
                 contentScale = ContentScale.Fit
             )
             CarrotPile()
@@ -440,36 +449,17 @@ private fun Playfield(
 
 @Composable
 private fun CarrotPile() {
-    Box(modifier = Modifier
+    Box(
+        modifier = Modifier
             .padding(start = 12.dp)
-            .size(width = 120.dp, height = 100.dp)) {
+            .size(width = 120.dp, height = 100.dp)
+    ) {
         Image(
-            painter = painterResource(id = R.drawable.carrot),
+            painter = painterResource(id = R.drawable.carrots),
             contentDescription = null,
             modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .size(86.dp)
-                    .rotate(-8f),
-            contentScale = ContentScale.Fit
-        )
-        Image(
-            painter = painterResource(id = R.drawable.carrot),
-            contentDescription = null,
-            modifier =
-                Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 8.dp)
-                        .size(80.dp)
-                        .rotate(12f),
-            contentScale = ContentScale.Fit
-        )
-        Image(
-            painter = painterResource(id = R.drawable.carrot),
-            contentDescription = null,
-            modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(82.dp)
-                    .rotate(-24f),
+                .align(Alignment.BottomStart)
+                .size(110.dp),
             contentScale = ContentScale.Fit
         )
     }
@@ -497,8 +487,8 @@ private fun RotatingBasket(
             painter = painterResource(id = R.drawable.central_ellipse),
             contentDescription = null,
             modifier = Modifier
-                    .size(BasketSize)
-                    .rotate(angle)
+                .size(BasketSize)
+                .rotate(angle)
         )
 
         // Render orbiting items (coins and boosts)
@@ -515,11 +505,11 @@ private fun RotatingBasket(
                         contentDescription = null,
                         modifier =
                             Modifier
-                                    .size(40.dp)
-                                    .graphicsLayer {
-                                            translationX = offsetX
-                                            translationY = offsetY
-                                    }
+                                .size(40.dp)
+                                .graphicsLayer {
+                                    translationX = offsetX
+                                    translationY = offsetY
+                                }
                     )
                 }
 
@@ -537,13 +527,13 @@ private fun RotatingBasket(
                     Box(
                         modifier =
                             Modifier
-                                    .size(42.dp)
-                                    .graphicsLayer {
-                                            translationX = offsetX
-                                            translationY = offsetY
-                                    }
-                                    .clip(CircleShape)
-                                    .background(boostColor.copy(alpha = 0.85f)),
+                                .size(42.dp)
+                                .graphicsLayer {
+                                    translationX = offsetX
+                                    translationY = offsetY
+                                }
+                                .clip(CircleShape)
+                                .background(boostColor.copy(alpha = 0.85f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
@@ -614,12 +604,12 @@ private fun RotatingBasket(
                 contentDescription = null,
                 modifier =
                     Modifier
-                            .size(PinnedCarrotSize)
-                            .graphicsLayer {
-                                    translationX = offsetX
-                                    translationY = offsetY
+                        .size(PinnedCarrotSize)
+                        .graphicsLayer {
+                            translationX = offsetX
+                            translationY = offsetY
                             rotationZ = totalAngle + 270f
-                    },
+                        },
             )
         }
 
@@ -634,12 +624,12 @@ private fun RotatingBasket(
                 contentDescription = null,
                 modifier =
                     Modifier
-                            .size(StickSize)
-                            .graphicsLayer {
-                                    translationX = offsetX
-                                    translationY = offsetY
-                                    rotationZ = totalAngle + 270f
-                            },
+                        .size(StickSize)
+                        .graphicsLayer {
+                            translationX = offsetX
+                            translationY = offsetY
+                            rotationZ = totalAngle + 270f
+                        },
             )
         }
     }
@@ -726,12 +716,12 @@ private fun ThrowingCarrot(
         contentDescription = null,
         modifier =
             modifier
-                    .size(ThrowingCarrotSize)
-                    .graphicsLayer {
-                            translationX = currentPosition.x
-                            translationY = currentPosition.y
-                            rotationZ = carrotRotation
-                    },
+                .size(ThrowingCarrotSize)
+                .graphicsLayer {
+                    translationX = currentPosition.x
+                    translationY = currentPosition.y
+                    rotationZ = carrotRotation
+                },
         contentScale = ContentScale.Fit
     )
 }

@@ -63,18 +63,6 @@ fun MenuScreen(
             label = "background_shift"
         )
 
-    val rabbitFloat by
-        infiniteTransition.animateFloat(
-            initialValue = -6f,
-            targetValue = 6f,
-            animationSpec =
-                infiniteRepeatable(
-                    animation = tween(2800, easing = androidx.compose.animation.core.LinearEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-            label = "rabbit_float"
-        )
-
     Box(modifier = Modifier.fillMaxSize()) {
         // 1. Background
         Image(
@@ -92,19 +80,14 @@ fun MenuScreen(
 
         // 2. Rabbit Image (Centered, behind UI but above background)
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Image(
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Image(
                     painter = painterResource(id = state.selectedSkin.previewRes),
                     contentDescription = null,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth(0.8f)
-                            .graphicsLayer {
-                                translationY = rabbitFloat
-                                scaleX = 1f + (rabbitFloat / 120f)
-                                scaleY = 1f + (rabbitFloat / 120f)
-                            },
+                    modifier = Modifier.fillMaxWidth(0.8f),
                     contentScale = ContentScale.Crop
-            )
+                )
+            }
         }
 
         // 3. UI Layer (Top and Bottom elements)
