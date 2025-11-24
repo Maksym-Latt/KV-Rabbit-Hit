@@ -25,9 +25,6 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -97,7 +94,7 @@ fun GameScreen(
             when (event) {
                 GameEvent.CoinCollected -> audio.playCoinPickup()
                 GameEvent.GameOver -> audio.playGameLose()
-                GameEvent.GameWin -> audio.playCoinPickup()
+                GameEvent.GameWin -> audio.playGameWin()
                 GameEvent.BoostCollected -> audio.playCoinPickup()
             }
         }
@@ -135,7 +132,9 @@ fun GameScreen(
                             detectTapGestures(
                                     onTap = { _ ->
                                             launchOffset.value = null
-                                            viewModel.throwCarrot()
+                                            if (viewModel.throwCarrot()) {
+                                                    audio.playHit()
+                                            }
                                     }
                             )
                     }
@@ -230,7 +229,7 @@ private fun GameHud(
             )
 
             Box(modifier = Modifier.weight(1f, fill = false), contentAlignment = Alignment.CenterEnd) {
-                MenuIconButton(iconVector = Icons.Default.Pause, onClick = onPause)
+                MenuIconButton(iconRes = R.drawable.settings, onClick = onPause)
             }
         }
 

@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +65,7 @@ fun MenuScreen(
                     verticalAlignment = Alignment.CenterVertically
             ) {
                 MenuCoinDisplay(amount = state.coins, onClick = onOpenShop)
-                MenuIconButton(iconVector = Icons.Default.Settings, onClick = onOpenSettings)
+                MenuIconButton(iconRes = R.drawable.settings, onClick = onOpenSettings)
             }
 
             Spacer(modifier = Modifier.height(20.dp))

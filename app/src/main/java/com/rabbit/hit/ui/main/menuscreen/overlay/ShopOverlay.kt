@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -68,7 +66,7 @@ fun ShopOverlay(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                MenuIconButton(iconVector = Icons.Default.ArrowBack, onClick = onClose)
+                MenuIconButton(iconRes = R.drawable.home, onClick = onClose)
                 MenuCoinDisplay(amount = coins, onClick = {})
             }
 

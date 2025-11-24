@@ -217,10 +217,10 @@ constructor(
         }
     }
 
-    fun throwCarrot() {
+    fun throwCarrot(): Boolean {
         val current = _state.value
-        if (!current.running || current.isPaused || current.isGameOver) return
-        if (current.flight != null) return
+        if (!current.running || current.isPaused || current.isGameOver) return false
+        if (current.flight != null) return false
 
         _state.update {
             val nextId = it.throwId + 1
@@ -229,6 +229,7 @@ constructor(
                     flight = CarrotFlight(id = nextId, elapsedMs = 0),
             )
         }
+        return true
     }
 
     fun resolveFlightIfReady() {

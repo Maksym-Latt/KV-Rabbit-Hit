@@ -13,11 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.MusicOff
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rabbit.hit.R
 import com.rabbit.hit.ui.main.component.GradientOutlinedText
 import com.rabbit.hit.ui.main.component.MenuActionButton
 import com.rabbit.hit.ui.main.component.MenuIconButton
@@ -63,16 +59,16 @@ fun GameSettingsOverlay(
                 title = "Sound",
                 checked = ui.soundVolume > 0,
                 onToggle = viewModel::toggleSound,
-                iconOn = Icons.Default.VolumeUp,
-                iconOff = Icons.Default.VolumeOff
+                iconOnRes = R.drawable.volume,
+                iconOffRes = R.drawable.muted
             )
 
             SettingToggleRow(
                 title = "Music",
                 checked = ui.musicVolume > 0,
                 onToggle = viewModel::toggleMusic,
-                iconOn = Icons.Default.MusicNote,
-                iconOff = Icons.Default.MusicOff
+                iconOnRes = R.drawable.volume,
+                iconOffRes = R.drawable.muted
             )
 
             Spacer(modifier = Modifier.height(6.dp))
