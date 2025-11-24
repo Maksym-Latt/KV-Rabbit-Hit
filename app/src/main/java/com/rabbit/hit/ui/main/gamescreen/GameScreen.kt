@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -282,7 +281,7 @@ private fun ActiveBoostBar(boost: GameViewModel.ActiveBoost) {
             modifier =
                 Modifier
                         .clip(RoundedCornerShape(18.dp))
-                        .background(boostColor.copy(alpha = 0.18f))
+                        .background(boostColor.copy(alpha = 0.38f))
                         .padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {

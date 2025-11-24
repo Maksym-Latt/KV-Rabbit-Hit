@@ -17,11 +17,11 @@ import kotlinx.coroutines.launch
 
 internal const val TARGET_ANGLE = 90f
 internal const val COLLISION_THRESHOLD = 8f
-internal const val CARROT_FLIGHT_DURATION_MS = 110L
+internal const val CARROT_FLIGHT_DURATION_MS = 80L
 private const val ROTATION_ACCELERATION = 0.45f
 private const val ROTATION_SPEED_LIMIT = 140f
 private val TARGET_SCORE = calculateTargetScore()
-private const val BOOST_DURATION_MS = 12_000L
+private const val BOOST_DURATION_MS = 5_000L
 
 @HiltViewModel
 class GameViewModel
