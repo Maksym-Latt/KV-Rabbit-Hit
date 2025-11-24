@@ -43,7 +43,7 @@ constructor(
             val id: Int = (Math.random() * 100000).toInt()
     )
 
-    data class ActiveBoost(val multiplier: Int, val remainingMs: Long)
+    data class ActiveBoost(val multiplier: Int, val remainingMs: Long, val totalMs: Long)
 
     data class CarrotFlight(val id: Int, val elapsedMs: Long = 0, val bouncing: Boolean = false)
 
@@ -123,15 +123,21 @@ constructor(
             // Dynamic speed variation - basket rotates 60%+ of time
             // Pauses are rare (10%) and max 1 second
             val timeSinceLastChange = System.currentTimeMillis() - current.lastSpeedChangeMs
-            val shouldChangeSpeed = timeSinceLastChange > (1500..3000).random()
+            val pauseExpired =
+                    current.targetRotationSpeed == 0f && timeSinceLastChange >= 1_000L
+            val shouldChangeSpeed = pauseExpired || timeSinceLastChange > (1500..3000).random()
 
             val newTargetSpeed =
                     if (shouldChangeSpeed) {
-                        when ((0..100).random()) {
-                            in 0..10 -> 0f // Pause (10% - rare, max 1 sec with timing)
-                            in 11..25 -> -current.rotationSpeed * 0.7f // Reverse (15%)
-                            in 26..40 -> current.rotationSpeed * 1.6f // Speed up (15%)
-                            else -> 55f // Normal rotation (60%)
+                        if (pauseExpired) {
+                            55f
+                        } else {
+                            when ((0..100).random()) {
+                                in 0..10 -> 0f // Pause (10% - rare, max 1 sec with timing)
+                                in 11..25 -> -current.rotationSpeed * 0.7f // Reverse (15%)
+                                in 26..40 -> current.rotationSpeed * 1.6f // Speed up (15%)
+                                else -> 55f // Normal rotation (60%)
+                            }
                         }.coerceIn(-ROTATION_SPEED_LIMIT, ROTATION_SPEED_LIMIT)
                     } else {
                         current.targetRotationSpeed
@@ -219,6 +225,7 @@ constructor(
             if (current.flight == null || current.isPaused || !current.running || current.isGameOver
             )
                     return@update current
+            if (current.flight.bouncing) return@update current
             resolveImpact(current)
         }
     }
@@ -251,7 +258,12 @@ constructor(
                     val boostMultiplier = if (hitItem.type == ItemType.BOOST_X2) 2 else 5
                     emitEvent(GameEvent.BoostCollected)
                     current.copy(
-                            activeBoost = ActiveBoost(boostMultiplier, 12000), // 12 seconds
+                            activeBoost =
+                                    ActiveBoost(
+                                            boostMultiplier,
+                                            remainingMs = 12_000,
+                                            totalMs = 12_000,
+                                    ), // 12 seconds
                             orbitingItems = current.orbitingItems.filter { it.id != hitItem.id },
                             carrots = current.carrots + CarrotPin(pinnedAngle),
                             flight = null,

@@ -9,20 +9,24 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -402,18 +406,37 @@ private fun RotatingBasket(
                     Box(
                         modifier =
                             Modifier
-                                    .size(50.dp)
+                                    .size(62.dp)
                                     .graphicsLayer {
                                             translationX = offsetX
                                             translationY = offsetY
                                     }
-                                    .clip(RoundedCornerShape(25.dp))
-                                    .background(boostColor),
+                                    .clip(CircleShape)
+                                    .background(boostColor.copy(alpha = 0.22f))
+                                    .border(
+                                            width = 2.dp,
+                                            color = boostColor.copy(alpha = 0.6f),
+                                            shape = CircleShape
+                                    ),
                         contentAlignment = Alignment.Center
                     ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                        .matchParentSize()
+                                        .background(
+                                                Brush.radialGradient(
+                                                        colors =
+                                                                listOf(
+                                                                        Color.White.copy(alpha = 0.55f),
+                                                                        Color.Transparent
+                                                                )
+                                                )
+                                        )
+                        )
                         Text(
                             text = boostText,
-                            color = Color.White,
+                            color = boostColor,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 18.sp
                         )
@@ -424,25 +447,57 @@ private fun RotatingBasket(
 
         // Render boost timer
         activeBoost?.let { boost ->
-            val seconds = (boost.remainingMs / 1000).toInt()
             val boostColor =
                 if (boost.multiplier == 2) Color(0xFF4CAF50) else Color(0xFFFF9800)
+            val progress =
+                (boost.remainingMs.toFloat() / boost.totalMs.toFloat()).coerceIn(0f, 1f)
 
-            Box(
-                modifier =
-                    Modifier
-                            .offset(y = (-150).dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(boostColor)
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text =
-                        "0:${seconds.toString().padStart(2, '0')} • x${boost.multiplier}",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+            val barHeight = 120.dp
+
+            Box(modifier = Modifier.matchParentSize()) {
+                Box(
+                    modifier =
+                        Modifier
+                                .align(Alignment.CenterEnd)
+                                .offset(x = BasketSize / 2 + 18.dp)
+                                .height(barHeight)
+                                .width(26.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color.White.copy(alpha = 0.25f))
+                                .border(
+                                        width = 2.dp,
+                                        color = boostColor.copy(alpha = 0.7f),
+                                        shape = RoundedCornerShape(14.dp)
+                                ),
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(progress)
+                                    .align(Alignment.BottomCenter)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                            Brush.verticalGradient(
+                                                    colors =
+                                                            listOf(
+                                                                    boostColor.copy(alpha = 0.95f),
+                                                                    boostColor.copy(alpha = 0.65f)
+                                                            )
+                                            )
+                                    )
+                    )
+                    Text(
+                        text = "x${boost.multiplier}",
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp,
+                        modifier =
+                            Modifier
+                                    .align(Alignment.Center)
+                                    .graphicsLayer { rotationZ = 90f }
+                    )
+                }
             }
         }
 
