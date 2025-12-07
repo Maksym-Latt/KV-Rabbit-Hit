@@ -1,0 +1,125 @@
+package com.rabbit.hit.ui.main.menuscreen
+
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.rabbit.hit.R
+import com.rabbit.hit.ui.main.component.MenuCoinDisplay
+import com.rabbit.hit.ui.main.component.MenuIconButton
+import com.rabbit.hit.ui.main.component.MenuPlayButton
+import com.rabbit.hit.ui.main.component.MenuStoreButton
+import com.rabbit.hit.ui.main.component.MenuTitle
+
+@Composable
+fun MenuScreen(
+        state: MainViewModel.UiState,
+        onStartGame: () -> Unit,
+        onOpenSettings: () -> Unit,
+        onOpenShop: () -> Unit,
+) {
+    var showButtons by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        showButtons = true
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "menu_background")
+    val parallaxShift by
+        infiniteTransition.animateFloat(
+            initialValue = -10f,
+            targetValue = 10f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(5000, easing = androidx.compose.animation.core.LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+            label = "background_shift"
+        )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+                painter = painterResource(id = R.drawable.bg_game_rh),
+                contentDescription = null,
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            translationX = parallaxShift
+                            translationY = parallaxShift / 2
+                        },
+                contentScale = ContentScale.Crop
+        )
+
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(id = state.selectedSkin.previewRes),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth(0.8f),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        Column(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+        ) {
+            Row(
+                    modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.displayCutout),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+            ) {
+                MenuCoinDisplay(amount = state.coins, onClick = onOpenShop)
+                MenuIconButton(iconRes = R.drawable.settings, onClick = onOpenSettings)
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            MenuTitle()
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(bottom = 100.dp)
+            ) {
+                MenuStoreButton(
+                    onClick = onOpenShop,
+                    appear = showButtons,
+                )
+
+                MenuPlayButton(onClick = onStartGame, appear = showButtons)
+            }
+        }
+    }
+}
